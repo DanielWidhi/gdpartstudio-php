@@ -1,31 +1,51 @@
 <?php
 include 'db.php';
 
-// 1. Ambil ID dari URL (contoh: portfolio-detail.php?id=1)
-$id = isset($_GET['id']) ? intval($_GET['id']) : 0;
+$project = null;
 
-// 2. Query Data Utama Project
-$query = mysqli_query($conn, "SELECT * FROM projects WHERE id = $id");
-$project = mysqli_fetch_assoc($query);
+// 1. Cek Parameter URL (Slug atau ID)
+if (isset($_GET['slug'])) {
+    $slug = mysqli_real_escape_string($conn, $_GET['slug']);
+    // Filter: Hanya ambil jika status = 'Published'
+    $query = mysqli_query($conn, "SELECT * FROM projects WHERE slug = '$slug' AND status = 'Published'");
+    $project = mysqli_fetch_assoc($query);
 
-// Jika ID tidak ditemukan, kembalikan ke halaman portfolio
+} elseif (isset($_GET['id'])) {
+    $id = intval($_GET['id']);
+    // Filter: Hanya ambil jika status = 'Published'
+    $query = mysqli_query($conn, "SELECT * FROM projects WHERE id = $id AND status = 'Published'");
+    $project = mysqli_fetch_assoc($query);
+}
+
+// 2. LOGIKA 404 (PENTING)
+// Jika $project kosong (artinya ID salah ATAU statusnya Draft/Archived)
 if (!$project) {
-    header("Location: portfolio.php");
+    // Set Header HTTP 404 agar mesin pencari tahu halaman ini tidak ada
+    http_response_code(404);
+    
+    // Panggil tampilan 404.php yang sudah kita buat
+    include '404.php'; 
+    
+    // Hentikan script agar konten detail di bawah tidak dimuat
     exit;
 }
 
-// 3. Query Gambar Gallery Tambahan (Grid Bawah)
+// --- JIKA LOLOS (Data Ada & Published), LANJUT KE BAWAH ---
+
+$id = $project['id']; // Ambil ID untuk query gallery
+
+// 3. Query Gallery
 $gallery_query = mysqli_query($conn, "SELECT * FROM project_gallery WHERE project_id = $id LIMIT 3");
 $gallery_images = [];
 while($img = mysqli_fetch_assoc($gallery_query)){
     $gallery_images[] = $img['image_url'];
 }
 
-// 4. Query Navigasi Previous & Next
-$prev_query = mysqli_query($conn, "SELECT id, title, category_display FROM projects WHERE id < $id ORDER BY id DESC LIMIT 1");
+// 4. Query Navigasi (Hanya Prev/Next yang Published)
+$prev_query = mysqli_query($conn, "SELECT id, title, slug, category_display FROM projects WHERE id < $id AND status = 'Published' ORDER BY id DESC LIMIT 1");
 $prev_project = mysqli_fetch_assoc($prev_query);
 
-$next_query = mysqli_query($conn, "SELECT id, title, category_display FROM projects WHERE id > $id ORDER BY id ASC LIMIT 1");
+$next_query = mysqli_query($conn, "SELECT id, title, slug, category_display FROM projects WHERE id > $id AND status = 'Published' ORDER BY id ASC LIMIT 1");
 $next_project = mysqli_fetch_assoc($next_query);
 ?>
 

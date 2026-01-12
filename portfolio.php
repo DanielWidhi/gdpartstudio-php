@@ -1,12 +1,15 @@
 <?php
-include 'db.php'; // Pastikan file ini ada dan koneksi berhasil
+include 'db.php'; 
 
-// 1. Ambil Data Projects (Untuk Grid Utama)
-$projects_query = mysqli_query($conn, "SELECT * FROM projects ORDER BY id ASC");
+// HANYA ambil data yang statusnya 'Published'
+// Draft tidak akan tampil di kartu grid
+$projects_query = mysqli_query($conn, "SELECT * FROM projects WHERE status = 'Published' ORDER BY id ASC");
+
 $projects = [];
 while ($row = mysqli_fetch_assoc($projects_query)) {
     $projects[] = $row;
 }
+
 
 // 2. Ambil Data Videos (Untuk Bagian Bawah)
 $videos_query = mysqli_query($conn, "SELECT * FROM videos ORDER BY id ASC");

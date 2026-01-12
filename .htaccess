@@ -1,0 +1,18 @@
+RewriteEngine On
+
+# 1. Pastikan folder assets/ images/ css/ tidak ikut di-rewrite
+RewriteCond %{REQUEST_URI} !^/assets/
+RewriteCond %{REQUEST_URI} !^/pages/
+
+# 2. Hapus ekstensi .php untuk halaman utama
+# Contoh: /portfolio -> portfolio.php
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteCond %{REQUEST_FILENAME}.php -f
+RewriteRule ^([^/]+)/?$ $1.php [L]
+
+# 3. Pretty URL untuk Detail Project
+# Contoh: /project/rina-dika-wedding -> portfolio-detail.php?slug=rina-dika-wedding
+RewriteRule ^project/([^/]+)/?$ portfolio-detail.php?slug=$1 [L]
+
+
+ErrorDocument 404 /404.php

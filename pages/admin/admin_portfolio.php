@@ -81,40 +81,14 @@ $total_rows = mysqli_num_rows($result);
 </head>
 <body class="bg-background-light text-[#0d121b] flex h-screen overflow-hidden">
 
-<!-- SIDEBAR -->
-<aside class="w-64 bg-white border-r border-[#cfd7e7] flex flex-col h-full shrink-0 z-20 hidden md:flex">
-    <div class="p-6 flex items-center gap-3">
-        <div class="w-8 h-8 rounded bg-primary flex items-center justify-center">
-            <span class="material-symbols-outlined text-white">camera</span>
-        </div>
-        <h1 class="text-[#0d121b] text-base font-bold tracking-tight">GDPARTSTUDIO</h1>
-    </div>
-    <nav class="flex flex-col gap-1 px-3 mt-2 flex-1">
-        <a class="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-[#f3f4f6] group transition-colors" href="#">
-            <span class="material-symbols-outlined text-[#4c669a] group-hover:text-[#0d121b]">dashboard</span>
-            <span class="text-[#4c669a] text-sm font-medium group-hover:text-[#0d121b]">Dashboard</span>
-        </a>
-        <!-- Active Link Style -->
-        <a class="flex items-center gap-3 px-3 py-2.5 rounded-lg bg-primary/10 text-primary group transition-colors" href="admin_portfolio.php">
-            <span class="material-symbols-outlined fill">inventory_2</span>
-            <span class="text-primary text-sm font-bold">Portfolio</span>
-        </a>
-        <a class="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-[#f3f4f6] group transition-colors" href="#">
-            <span class="material-symbols-outlined text-[#4c669a] group-hover:text-[#0d121b]">handshake</span>
-            <span class="text-[#4c669a] text-sm font-medium group-hover:text-[#0d121b]">Services</span>
-        </a>
-        <a class="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-[#f3f4f6] group transition-colors" href="#">
-            <span class="material-symbols-outlined text-[#4c669a] group-hover:text-[#0d121b]">settings</span>
-            <span class="text-[#4c669a] text-sm font-medium group-hover:text-[#0d121b]">Settings</span>
-        </a>
-    </nav>
-    <div class="p-3 mt-auto border-t border-[#cfd7e7]">
-        <a class="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-[#fee2e2] group transition-colors" href="../logout.php">
-            <span class="material-symbols-outlined text-[#4c669a] group-hover:text-red-600">logout</span>
-            <span class="text-[#4c669a] text-sm font-medium group-hover:text-red-600">Logout</span>
-        </a>
-    </div>
-</aside>
+    <!-- INCLUDE SIDEBAR -->
+    <?php 
+        $currentPage = 'portfolio'; // Definisikan halaman aktif
+        include '../../assets/components/admin/sidebar.php'; 
+    ?>
+
+    <!-- INCLUDE MOBILE HEADER -->
+    <?php include '../../assets/components/admin/mobile_header.php'; ?>
 
 <!-- MAIN CONTENT -->
 <main class="flex-1 flex flex-col h-full overflow-hidden relative md:ml-0">
