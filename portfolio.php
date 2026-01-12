@@ -1,17 +1,15 @@
 <?php
 include 'db.php'; 
 
-// HANYA ambil data yang statusnya 'Published'
-// Draft tidak akan tampil di kartu grid
-$projects_query = mysqli_query($conn, "SELECT * FROM projects WHERE status = 'Published' ORDER BY id ASC");
+// 1. Ambil Data Projects (Hanya yang Published)
+$projects_query = mysqli_query($conn, "SELECT * FROM projects WHERE status = 'Published' ORDER BY id DESC"); // Saya ubah ke DESC agar project terbaru muncul duluan
 
 $projects = [];
 while ($row = mysqli_fetch_assoc($projects_query)) {
     $projects[] = $row;
 }
 
-
-// 2. Ambil Data Videos (Untuk Bagian Bawah)
+// 2. Ambil Data Videos
 $videos_query = mysqli_query($conn, "SELECT * FROM videos ORDER BY id ASC");
 ?>
 
@@ -68,7 +66,7 @@ $videos_query = mysqli_query($conn, "SELECT * FROM videos ORDER BY id ASC");
     <header class="fixed top-0 z-40 w-full border-b border-gray-100 bg-white/90 backdrop-blur-md transition-all duration-300">
         <div class="mx-auto flex max-w-7xl items-center justify-between px-6 py-4 lg:px-8">
             <!-- Logo -->
-            <div class="flex items-center gap-3 cursor-pointer" onclick="window.location.href='index.php'">
+            <div class="flex items-center gap-3 cursor-pointer" onclick="window.location.href='index'">
                 <div class="flex size-10 items-center justify-center rounded-lg bg-slate-900 text-white shadow-md ring-1 ring-slate-900/5">
                     <span class="material-symbols-outlined text-[24px]">shutter_speed</span>
                 </div>
@@ -80,10 +78,10 @@ $videos_query = mysqli_query($conn, "SELECT * FROM videos ORDER BY id ASC");
 
             <!-- Navigation -->
             <nav class="hidden md:flex flex-1 justify-center gap-10">
-                <a class="text-sm font-medium text-slate-500 hover:text-slate-900 transition-colors" href="index.php">Home</a>
-                <a class="text-sm font-medium text-slate-900 border-b-2 border-slate-900 pb-0.5" href="portfolio.php">Portfolio</a>
-                <a class="text-sm font-medium text-slate-500 hover:text-slate-900 transition-colors" href="#">Services</a>
-                <a class="text-sm font-medium text-slate-500 hover:text-slate-900 transition-colors" href="#">Contact</a>
+                <a class="text-sm font-medium text-slate-500 hover:text-slate-900 transition-colors" href="index">Home</a>
+                <a class="text-sm font-medium text-slate-900 border-b-2 border-slate-900 pb-0.5" href="portfolio">Portfolio</a>
+                <a class="text-sm font-medium text-slate-500 hover:text-slate-900 transition-colors" href="services">Services</a>
+                <a class="text-sm font-medium text-slate-500 hover:text-slate-900 transition-colors" href="contact">Contact</a>
             </nav>
 
             <!-- CTA Button -->
@@ -138,9 +136,9 @@ $videos_query = mysqli_query($conn, "SELECT * FROM videos ORDER BY id ASC");
                     
                     <?php foreach ($projects as $project): ?>
                     <!-- Item Project -->
-                    <!-- HREF mengarah ke halaman Detail dengan ID spesifik -->
+                    <!-- PERBAIKAN: Menggunakan href project/slug -->
                     <a class="group block cursor-pointer gallery-item project-card" 
-                       href="portfolio-detail.php?id=<?= $project['id'] ?>" 
+                       href="project/<?= $project['slug'] ?>"
                        data-category="<?= $project['filter_tag'] ?>">
                         
                         <div class="relative overflow-hidden rounded-2xl bg-slate-100 aspect-[4/5] isolate shadow-sm ring-1 ring-slate-900/5">
