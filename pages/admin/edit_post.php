@@ -1,0 +1,342 @@
+<?php
+session_start();
+include '../../db.php';
+
+// 1. Cek Login
+if (!isset($_SESSION['admin_logged_in']) || $_SESSION['admin_logged_in'] !== true) {
+    header("Location: ../login.php");
+    exit;
+}
+
+// 2. Ambil ID dari URL
+if (!isset($_GET['id'])) {
+    header("Location: admin_portfolio.php");
+    exit;
+}
+$id = intval($_GET['id']);
+
+// 3. Ambil Data Project Lama
+$query = mysqli_query($conn, "SELECT * FROM projects WHERE id = $id");
+$data = mysqli_fetch_assoc($query);
+
+// Jika Data Tidak Ditemukan
+if (!$data) {
+    echo "<script>alert('Data tidak ditemukan!'); window.location='admin_portfolio.php';</script>";
+    exit;
+}
+
+// 4. Proses Update Data
+if ($_SERVER["REQUEST_METHOD"] == "POST") {
+    $title = mysqli_real_escape_string($conn, $_POST['title']);
+    $client = mysqli_real_escape_string($conn, $_POST['client']);
+    $description = mysqli_real_escape_string($conn, $_POST['description']);
+    $location = mysqli_real_escape_string($conn, $_POST['location']);
+    $date = mysqli_real_escape_string($conn, $_POST['date']);
+    $status = $_POST['status'];
+    
+    // Auto Generate Slug Baru (Opsional, jika ingin slug berubah mengikuti judul)
+    $slug = strtolower(trim(preg_replace('/[^A-Za-z0-9-]+/', '-', $title)));
+
+    // Mapping Kategori
+    $category_input = $_POST['category_preset'];
+    $category_display = $data['category_display']; // Default lama
+    $filter_tag = $data['filter_tag']; // Default lama
+
+    // Update kategori jika user memilih
+    if($category_input) {
+        switch ($category_input) {
+            case 'wedding':
+                $category_display = "Wedding Photography";
+                $filter_tag = "weddings";
+                break;
+            case 'ceremony':
+                $category_display = "Religious Ceremony";
+                $filter_tag = "religious";
+                break;
+            case 'event':
+                $category_display = "Corporate Event";
+                $filter_tag = "events";
+                break;
+        }
+    }
+
+    // Logic Update Gambar
+    $image_query = "";
+    if (!empty($_FILES["thumbnail"]["name"])) {
+        $target_dir = "../../assets/uploads/";
+        $filename = time() . "_" . basename($_FILES["thumbnail"]["name"]);
+        
+        if (move_uploaded_file($_FILES["thumbnail"]["tmp_name"], $target_dir . $filename)) {
+            // Hapus gambar lama fisik
+            if (file_exists("../../" . $data['image_url'])) {
+                unlink("../../" . $data['image_url']);
+            }
+            $db_path = "assets/uploads/" . $filename;
+            $image_query = ", image_url='$db_path'";
+        }
+    }
+
+    $sql = "UPDATE projects SET 
+            title='$title', slug='$slug', client_name='$client', 
+            category_display='$category_display', filter_tag='$filter_tag', 
+            event_date='$date', location='$location', description='$description', 
+            status='$status' $image_query 
+            WHERE id=$id";
+
+    if (mysqli_query($conn, $sql)) {
+        echo "<script>alert('Perubahan Berhasil Disimpan!'); window.location='admin_portfolio.php';</script>";
+    } else {
+        echo "<script>alert('Gagal Update: " . mysqli_error($conn) . "');</script>";
+    }
+}
+?>
+
+<!DOCTYPE html>
+<html class="light" lang="en">
+<head>
+    <meta charset="utf-8"/>
+    <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+    <title>Edit Postingan - GDPARTSTUDIO</title>
+    <link href="https://fonts.googleapis.com" rel="preconnect"/>
+    <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&amp;display=swap" rel="stylesheet"/>
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <script>
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#135bec",
+                        "primary-hover": "#0f4bc4",
+                        "background-light": "#f8f9fc",
+                        "background-dark": "#101622",
+                    },
+                    fontFamily: {
+                        "display": ["Inter", "sans-serif"]
+                    },
+                },
+            },
+        }
+    </script>
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        .material-symbols-outlined { font-size: 20px; font-variation-settings: 'FILL' 0; }
+        .material-symbols-outlined.fill { font-variation-settings: 'FILL' 1; }
+    </style>
+</head>
+<body class="bg-background-light text-[#0d121b] flex h-screen overflow-hidden">
+
+    <!-- SIDEBAR -->
+    <aside class="w-64 bg-white border-r border-[#cfd7e7] flex flex-col h-full shrink-0 z-20 hidden md:flex">
+        <div class="p-6 flex items-center gap-3">
+            <div class="w-8 h-8 rounded bg-primary flex items-center justify-center">
+                <span class="material-symbols-outlined text-white">camera</span>
+            </div>
+            <h1 class="text-[#0d121b] text-base font-bold tracking-tight">GDPARTSTUDIO</h1>
+        </div>
+        <nav class="flex flex-col gap-1 px-3 mt-2 flex-1">
+            <a class="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-[#f3f4f6] text-[#4c669a]" href="#">
+                <span class="material-symbols-outlined">dashboard</span> Dashboard
+            </a>
+            <a class="flex items-center gap-3 px-3 py-2.5 rounded-lg bg-primary/10 text-primary font-bold" href="admin_portfolio.php">
+                <span class="material-symbols-outlined fill">inventory_2</span> Portfolio
+            </a>
+            <a class="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-[#f3f4f6] text-[#4c669a]" href="#">
+                <span class="material-symbols-outlined">handshake</span> Services
+            </a>
+        </nav>
+        <div class="p-3 mt-auto border-t border-[#cfd7e7]">
+            <a class="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-[#fee2e2] text-[#4c669a] hover:text-red-600" href="../logout.php">
+                <span class="material-symbols-outlined">logout</span> Logout
+            </a>
+        </div>
+    </aside>
+
+    <!-- MAIN CONTENT -->
+    <main class="flex-1 flex flex-col h-full overflow-hidden relative">
+        
+        <!-- HEADER -->
+        <header class="h-16 bg-white border-b border-[#cfd7e7] flex items-center justify-end px-8 shrink-0">
+            <div class="flex items-center gap-3">
+                <div class="text-right hidden sm:block">
+                    <p class="text-sm font-semibold text-[#0d121b]"><?= $_SESSION['admin_name'] ?? 'Admin' ?></p>
+                    <p class="text-xs text-[#4c669a]"><?= $_SESSION['admin_email'] ?? 'admin@email.com' ?></p>
+                </div>
+                <div class="w-10 h-10 rounded-full bg-gray-200 bg-cover bg-center border border-gray-300" style="background-image: url('../../assets/images/user-placeholder.jpg');"></div>
+            </div>
+        </header>
+
+        <!-- SCROLL AREA -->
+        <div class="flex-1 overflow-y-auto bg-background-light p-4 md:p-8">
+            <div class="max-w-[1200px] mx-auto flex flex-col gap-6">
+                
+                <!-- START FORM -->
+                <form action="" method="POST" enctype="multipart/form-data">
+                    
+                    <!-- Page Header -->
+                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+                        <div>
+                            <div class="flex items-center gap-2 text-sm text-[#4c669a] mb-1">
+                                <a href="admin_portfolio.php" class="hover:text-primary flex items-center gap-1">
+                                    <span class="material-symbols-outlined text-[16px]">arrow_back</span> Portfolio
+                                </a>
+                                <span class="material-symbols-outlined text-[16px]">chevron_right</span>
+                                <span class="font-medium text-[#0d121b]">Edit Postingan</span>
+                            </div>
+                            <h2 class="text-[#0d121b] text-[32px] font-bold leading-tight">Edit Postingan</h2>
+                            <p class="text-[#4c669a] text-sm mt-1">Perbarui detail, gambar, dan status postingan.</p>
+                        </div>
+                        <div class="flex items-center gap-3">
+                            <a href="admin_portfolio.php" class="px-4 py-2.5 rounded-lg border border-[#cfd7e7] bg-white text-[#4c669a] text-sm font-medium hover:bg-[#f3f4f6] transition-colors">
+                                Batal
+                            </a>
+                            <button type="submit" class="flex items-center gap-2 bg-primary hover:bg-primary-hover text-white px-6 py-2.5 rounded-lg transition-colors shadow-sm font-bold text-sm">
+                                <span class="material-symbols-outlined text-[20px]">save</span>
+                                Simpan Perubahan
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                        
+                        <!-- LEFT COLUMN -->
+                        <div class="lg:col-span-2 space-y-6">
+                            
+                            <!-- Card Info -->
+                            <div class="bg-white border border-[#cfd7e7] rounded-xl shadow-sm overflow-hidden">
+                                <div class="border-b border-[#cfd7e7] px-6 py-4 bg-[#f8fafc]">
+                                    <h3 class="text-[#0d121b] text-base font-bold">Informasi Proyek</h3>
+                                </div>
+                                <div class="p-6 space-y-6">
+                                    <div>
+                                        <label class="block text-sm font-medium text-[#0d121b] mb-1.5">Judul Proyek</label>
+                                        <input name="title" type="text" class="block w-full rounded-lg border-[#cfd7e7] bg-[#f8f9fc] text-sm px-4 py-2.5 focus:border-primary focus:ring-primary" value="<?= $data['title'] ?>" required/>
+                                    </div>
+                                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                        <div>
+                                            <label class="block text-sm font-medium text-[#4c669a] mb-1.5">ID Postingan</label>
+                                            <input class="block w-full rounded-lg border-[#e2e8f0] bg-gray-50 text-[#64748b] text-sm px-4 py-2.5 cursor-not-allowed" readonly type="text" value="#GD-2023-<?= str_pad($data['id'], 3, '0', STR_PAD_LEFT) ?>"/>
+                                        </div>
+                                        <div>
+                                            <label class="block text-sm font-medium text-[#0d121b] mb-1.5">Slug URL (Auto)</label>
+                                            <input class="block w-full rounded-lg border-[#cfd7e7] bg-[#f8f9fc] text-sm px-4 py-2.5 cursor-not-allowed" readonly type="text" value="<?= $data['slug'] ?>"/>
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <label class="block text-sm font-medium text-[#0d121b] mb-1.5">Deskripsi</label>
+                                        <textarea name="description" rows="6" class="block w-full rounded-lg border-[#cfd7e7] bg-[#f8f9fc] text-sm px-4 py-2.5 focus:border-primary focus:ring-primary"><?= $data['description'] ?></textarea>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Card Detail Tambahan -->
+                            <div class="bg-white border border-[#cfd7e7] rounded-xl shadow-sm overflow-hidden">
+                                <div class="border-b border-[#cfd7e7] px-6 py-4 bg-[#f8fafc]">
+                                    <h3 class="text-[#0d121b] text-base font-bold">Detail Tambahan</h3>
+                                </div>
+                                <div class="p-6 space-y-4">
+                                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                        <div>
+                                            <label class="block text-sm font-medium text-[#0d121b] mb-1.5">Nama Klien</label>
+                                            <input name="client" type="text" class="block w-full rounded-lg border-[#cfd7e7] bg-[#f8f9fc] text-sm px-4 py-2.5" value="<?= $data['client_name'] ?>" required/>
+                                        </div>
+                                        <div>
+                                            <label class="block text-sm font-medium text-[#0d121b] mb-1.5">Lokasi</label>
+                                            <div class="relative">
+                                                <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-[#94a3b8] material-symbols-outlined text-[18px]">location_on</span>
+                                                <input name="location" type="text" class="block w-full pl-9 rounded-lg border-[#cfd7e7] bg-[#f8f9fc] text-sm px-4 py-2.5" value="<?= $data['location'] ?>" required/>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                        </div>
+
+                        <!-- RIGHT COLUMN -->
+                        <div class="lg:col-span-1 space-y-6">
+                            
+                            <!-- Status & Kategori -->
+                            <div class="bg-white border border-[#cfd7e7] rounded-xl shadow-sm overflow-hidden">
+                                <div class="border-b border-[#cfd7e7] px-6 py-4 bg-[#f8fafc]">
+                                    <h3 class="text-[#0d121b] text-base font-bold">Status Publikasi</h3>
+                                </div>
+                                <div class="p-6 space-y-4">
+                                    <div>
+                                        <label class="block text-sm font-medium text-[#0d121b] mb-1.5">Status</label>
+                                        <select name="status" class="block w-full rounded-lg border-[#cfd7e7] bg-[#f8f9fc] text-sm px-4 py-2.5 focus:border-primary focus:ring-primary">
+                                            <option value="Published" <?= $data['status'] == 'Published' ? 'selected' : '' ?>>Published</option>
+                                            <option value="Draft" <?= $data['status'] == 'Draft' ? 'selected' : '' ?>>Draft</option>
+                                            <option value="Archived" <?= $data['status'] == 'Archived' ? 'selected' : '' ?>>Archived</option>
+                                        </select>
+                                    </div>
+                                    <div>
+                                        <label class="block text-sm font-medium text-[#0d121b] mb-1.5">Tanggal Acara</label>
+                                        <input name="date" type="date" class="block w-full rounded-lg border-[#cfd7e7] bg-[#f8f9fc] text-sm px-4 py-2.5" value="<?= date('Y-m-d', strtotime($data['event_date'])) ?>"/>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="bg-white border border-[#cfd7e7] rounded-xl shadow-sm overflow-hidden">
+                                <div class="border-b border-[#cfd7e7] px-6 py-4 bg-[#f8fafc]">
+                                    <h3 class="text-[#0d121b] text-base font-bold">Kategori & Tag</h3>
+                                </div>
+                                <div class="p-6 space-y-4">
+                                    <div>
+                                        <label class="block text-sm font-medium text-[#0d121b] mb-1.5">Kategori</label>
+                                        <select name="category_preset" class="block w-full rounded-lg border-[#cfd7e7] bg-[#f8f9fc] text-sm px-4 py-2.5 focus:border-primary focus:ring-primary">
+                                            <option value="wedding" <?= $data['filter_tag'] == 'weddings' ? 'selected' : '' ?>>Wedding</option>
+                                            <option value="ceremony" <?= $data['filter_tag'] == 'religious' ? 'selected' : '' ?>>Ceremony</option>
+                                            <option value="event" <?= $data['filter_tag'] == 'events' ? 'selected' : '' ?>>Corporate Event</option>
+                                        </select>
+                                    </div>
+                                    <div>
+                                        <label class="block text-sm font-medium text-[#0d121b] mb-1.5">Tag (System)</label>
+                                        <div class="flex flex-wrap gap-2">
+                                            <span class="px-2.5 py-1 rounded bg-blue-50 text-blue-700 text-xs font-medium border border-blue-100">#<?= $data['filter_tag'] ?></span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Media -->
+                            <div class="bg-white border border-[#cfd7e7] rounded-xl shadow-sm overflow-hidden">
+                                <div class="border-b border-[#cfd7e7] px-6 py-4 bg-[#f8fafc]">
+                                    <h3 class="text-[#0d121b] text-base font-bold">Thumbnail Utama</h3>
+                                </div>
+                                <div class="p-6">
+                                    <div class="w-full aspect-video rounded-lg bg-gray-100 border border-[#e2e8f0] overflow-hidden relative group mb-4">
+                                        <img src="../../<?= $data['image_url'] ?>" class="w-full h-full object-cover">
+                                        <div class="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                                            <span class="text-white text-sm font-medium">Ganti Gambar di Bawah</span>
+                                        </div>
+                                    </div>
+                                    
+                                    <label class="block text-sm font-medium text-[#0d121b] mb-1.5">Ganti Gambar Baru</label>
+                                    <input type="file" name="thumbnail" class="block w-full text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-xs file:font-semibold file:bg-primary file:text-white hover:file:bg-primary-hover"/>
+                                </div>
+                            </div>
+
+                            <!-- Delete Zone -->
+                            <div class="bg-red-50 border border-red-100 rounded-xl shadow-sm overflow-hidden">
+                                <div class="p-6">
+                                    <h3 class="text-red-800 text-sm font-bold mb-2">Hapus Postingan</h3>
+                                    <p class="text-red-600/80 text-xs mb-4">Tindakan ini tidak dapat dibatalkan.</p>
+                                    <a href="admin_portfolio.php?delete_id=<?= $data['id'] ?>" onclick="return confirm('Yakin ingin menghapus permanen?')" class="flex items-center justify-center gap-2 bg-white border border-red-200 text-red-600 hover:bg-red-600 hover:text-white px-4 py-2.5 rounded-lg transition-colors font-medium text-sm">
+                                        <span class="material-symbols-outlined text-[20px]">delete</span> Hapus Postingan
+                                    </a>
+                                </div>
+                            </div>
+
+                        </div>
+                    </div>
+                </form>
+                <!-- END FORM -->
+
+            </div>
+        </div>
+    </main>
+</body>
+</html>
