@@ -14,9 +14,15 @@
     <nav class="flex flex-col gap-1 px-3 mt-2 flex-1">
         
         <!-- Dashboard (Placeholder) -->
-        <a href="admindashboard.php" class="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-[#f3f4f6] group transition-colors">
-            <span class="material-symbols-outlined text-[#4c669a] group-hover:text-[#0d121b]">dashboard</span>
-            <span class="text-[#4c669a] text-sm font-medium group-hover:text-[#0d121b]">Dashboard</span>
+        <?php 
+            $isActive = (isset($currentPage) && $currentPage == 'dashboard');
+            $classLink = $isActive ? 'bg-primary/10 text-primary' : 'hover:bg-[#f3f4f6] text-[#4c669a] group';
+            $classIcon = $isActive ? 'fill' : 'group-hover:text-[#0d121b]';
+            $classText = $isActive ? 'font-bold' : 'font-medium group-hover:text-[#0d121b]';
+        ?>
+        <a href="admindashboard.php" class="flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors <?= $classLink ?>">
+            <span class="material-symbols-outlined <?= $classIcon ?>">dashboard</span>
+            <span class="text-sm <?= $classText ?>">Dashboard</span>
         </a>
 
         <!-- Portfolio Link -->

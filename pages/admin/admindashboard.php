@@ -8,13 +8,35 @@ if (!isset($_SESSION['admin_logged_in']) || $_SESSION['admin_logged_in'] !== tru
     exit;
 }
 
-// 2. HITUNG DATA
+// 2. HITUNG DATA DASHBOARD
+
+// A. Total Proyek
 $q_proj = mysqli_query($conn, "SELECT COUNT(*) as total FROM projects");
 $total_projects = mysqli_fetch_assoc($q_proj)['total'];
 
+// B. Total Layanan
 $q_serv = mysqli_query($conn, "SELECT COUNT(*) as total FROM services");
 $total_services = mysqli_fetch_assoc($q_serv)['total'];
 
+// C. Pesanan Baru (Invoice status 'Pending')
+$q_pending = mysqli_query($conn, "SELECT COUNT(*) as total FROM invoices WHERE status = 'Pending'");
+$total_pending = mysqli_fetch_assoc($q_pending)['total'];
+
+// D. Estimasi Pendapatan (Sum Grand Total Invoice yang statusnya 'Lunas')
+$q_income = mysqli_query($conn, "SELECT SUM(grand_total) as total FROM invoices WHERE status = 'Lunas'");
+$d_income = mysqli_fetch_assoc($q_income);
+$raw_income = $d_income['total'] ?? 0;
+
+// Format Rupiah Singkat (Jt / M)
+function formatShortRp($n) {
+    if ($n >= 1000000000) return 'Rp ' . round($n / 1000000000, 1) . 'M';
+    if ($n >= 1000000) return 'Rp ' . round($n / 1000000, 1) . 'jt';
+    return 'Rp ' . number_format($n, 0, ',', '.');
+}
+
+$formatted_income = formatShortRp($raw_income);
+
+// E. Proyek Terbaru
 $q_recent = mysqli_query($conn, "SELECT * FROM projects ORDER BY created_at DESC LIMIT 5");
 ?>
 
@@ -105,6 +127,7 @@ $q_recent = mysqli_query($conn, "SELECT * FROM projects ORDER BY created_at DESC
 
                         <!-- Cards -->
                         <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
+                            <!-- Card 1: Total Proyek -->
                             <div class="bg-white p-5 rounded-xl border border-[#cfd7e7] shadow-sm flex flex-col gap-1">
                                 <div class="flex items-center justify-between mb-2">
                                     <span class="p-2 bg-blue-50 text-blue-600 rounded-lg material-symbols-outlined">photo_library</span>
@@ -113,6 +136,8 @@ $q_recent = mysqli_query($conn, "SELECT * FROM projects ORDER BY created_at DESC
                                 <p class="text-[#64748b] text-sm font-medium">Total Proyek</p>
                                 <h3 class="text-[#0d121b] text-2xl font-bold"><?= $total_projects ?></h3>
                             </div>
+
+                            <!-- Card 2: Total Layanan -->
                             <div class="bg-white p-5 rounded-xl border border-[#cfd7e7] shadow-sm flex flex-col gap-1">
                                 <div class="flex items-center justify-between mb-2">
                                     <span class="p-2 bg-purple-50 text-purple-600 rounded-lg material-symbols-outlined">handshake</span>
@@ -121,23 +146,26 @@ $q_recent = mysqli_query($conn, "SELECT * FROM projects ORDER BY created_at DESC
                                 <p class="text-[#64748b] text-sm font-medium">Total Layanan</p>
                                 <h3 class="text-[#0d121b] text-2xl font-bold"><?= $total_services ?></h3>
                             </div>
-                            <!-- Static dummy for now -->
+
+                            <!-- Card 3: Pesanan Baru (Invoice Pending) -->
                             <div class="bg-white p-5 rounded-xl border border-[#cfd7e7] shadow-sm flex flex-col gap-1">
                                 <div class="flex items-center justify-between mb-2">
                                     <span class="p-2 bg-orange-50 text-orange-600 rounded-lg material-symbols-outlined">notifications_active</span>
                                     <span class="text-xs font-semibold text-orange-600 bg-orange-50 px-2 py-0.5 rounded-full">Baru</span>
                                 </div>
-                                <p class="text-[#64748b] text-sm font-medium">Pesanan Baru</p>
-                                <h3 class="text-[#0d121b] text-2xl font-bold">7</h3>
+                                <p class="text-[#64748b] text-sm font-medium">Invoice Pending</p>
+                                <h3 class="text-[#0d121b] text-2xl font-bold"><?= $total_pending ?></h3>
                             </div>
-                            <div class="bg-white p-5 rounded-xl border border-[#cfd7e7] shadow-sm flex flex-col gap-1">
-                                <div class="flex items-center justify-between mb-2">
-                                    <span class="p-2 bg-green-50 text-green-600 rounded-lg material-symbols-outlined">payments</span>
-                                </div>
-                                <p class="text-[#64748b] text-sm font-medium">Estimasi Pendapatan</p>
-                                <h3 class="text-[#0d121b] text-2xl font-bold">Rp 45.2M</h3>
-                            </div>
-                        </div>
+
+    <!-- Card 4: Pendapatan (Total Lunas) -->
+    <div class="bg-white p-5 rounded-xl border border-[#cfd7e7] shadow-sm flex flex-col gap-1">
+        <div class="flex items-center justify-between mb-2">
+            <span class="p-2 bg-green-50 text-green-600 rounded-lg material-symbols-outlined">payments</span>
+        </div>
+        <p class="text-[#64748b] text-sm font-medium">Total Pendapatan (Lunas)</p>
+        <h3 class="text-[#0d121b] text-2xl font-bold"><?= $formatted_income ?></h3>
+    </div>
+</div>
 
                         <!-- Table -->
                         <div class="bg-white border border-[#cfd7e7] rounded-xl shadow-sm overflow-hidden">
