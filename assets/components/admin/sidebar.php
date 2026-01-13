@@ -4,6 +4,7 @@
     <div class="p-6 flex items-center gap-3">
         <!-- Logo Image -->
         <div class="h-8 w-auto flex items-center justify-center">
+            <!-- Pastikan path logo sesuai dengan preferensi Anda -->
             <img src="../../assets/images/Logo2b.png" alt="Logo" class="h-full w-auto object-contain rounded p-1">
         </div>
         <h1 class="text-[#0d121b] text-base font-bold tracking-tight">GDPARTSTUDIO</h1>
@@ -40,6 +41,18 @@
         <a href="admin_services.php" class="flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors <?= $classLink ?>">
             <span class="material-symbols-outlined <?= $classIcon ?>">handshake</span>
             <span class="text-sm <?= $classText ?>">Services</span>
+        </a>
+
+        <!-- Daftar Admin Link (BARU) -->
+        <?php 
+            $isActive = (isset($currentPage) && $currentPage == 'admins');
+            $classLink = $isActive ? 'bg-primary/10 text-primary' : 'hover:bg-[#f3f4f6] text-[#4c669a] group';
+            $classIcon = $isActive ? 'fill' : 'group-hover:text-[#0d121b]';
+            $classText = $isActive ? 'font-bold' : 'font-medium group-hover:text-[#0d121b]';
+        ?>
+        <a href="manage_admins.php" class="flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors <?= $classLink ?>">
+            <span class="material-symbols-outlined <?= $classIcon ?>">group</span>
+            <span class="text-sm <?= $classText ?>">Daftar Admin</span>
         </a>
 
         <!-- Settings (Placeholder) -->
