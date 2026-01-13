@@ -58,40 +58,10 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 <body class="bg-background text-slate-800 overflow-x-hidden antialiased flex flex-col min-h-screen">
 
 <!-- NAVBAR -->
-<div class="w-full bg-surface/90 backdrop-blur-md sticky top-0 z-50 shadow-sm transition-all duration-300 border-b border-slate-100">
-    <div class="max-w-[1280px] mx-auto px-6 md:px-12">
-        <header class="flex items-center justify-between whitespace-nowrap py-5">
-            <!-- Logo -->
-            <div class="flex items-center gap-3 cursor-pointer" onclick="window.location.href='index.php'">
-                <div class="size-9 text-primary">
-                    <svg class="w-full h-full" fill="none" viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
-                        <path clip-rule="evenodd" d="M24 0.757355L47.2426 24L24 47.2426L0.757355 24L24 0.757355ZM21 35.7574V12.2426L9.24264 24L21 35.7574Z" fill="currentColor" fill-rule="evenodd"></path>
-                    </svg>
-                </div>
-                <h2 class="text-slate-900 text-xl font-extrabold tracking-tight">GDPARTSTUDIO</h2>
-            </div>
-
-            <!-- Menu Desktop -->
-            <div class="hidden md:flex flex-1 justify-end gap-10 items-center">
-                <nav class="flex items-center gap-8">
-                    <a class="text-slate-600 hover:text-primary text-sm font-semibold transition-colors" href="index.php">Beranda</a>
-                    <a class="text-slate-600 hover:text-primary text-sm font-semibold transition-colors" href="portfolio.php">Portofolio</a>
-                    <a class="text-slate-600 hover:text-primary text-sm font-semibold transition-colors" href="services.php">Layanan</a>
-                    <!-- Active State for Contact -->
-                    <a class="text-primary text-sm font-bold" href="contact.php">Kontak</a>
-                </nav>
-                <button class="rounded-full h-11 px-7 bg-slate-900 hover:bg-primary transition-colors text-white text-sm font-bold shadow-lg shadow-slate-900/10">
-                    Pesan Sekarang
-                </button>
-            </div>
-
-            <!-- Mobile Menu Button -->
-            <button class="md:hidden text-slate-900 p-2">
-                <span class="material-symbols-outlined">menu</span>
-            </button>
-        </header>
-    </div>
-</div>
+    <?php 
+        $currentPage = 'contact'; 
+        include 'assets/components/navbar/navbar.php'; 
+    ?>
 
 <main class="flex-grow">
     <div class="max-w-[1280px] mx-auto px-6 md:px-12 py-16 md:py-24">

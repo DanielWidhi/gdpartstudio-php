@@ -63,36 +63,10 @@ $videos_query = mysqli_query($conn, "SELECT * FROM videos ORDER BY id ASC");
 <div class="flex min-h-screen flex-col">
     
     <!-- HEADER -->
-    <header class="fixed top-0 z-40 w-full border-b border-gray-100 bg-white/90 backdrop-blur-md transition-all duration-300">
-        <div class="mx-auto flex max-w-7xl items-center justify-between px-6 py-4 lg:px-8">
-            <!-- Logo -->
-            <div class="flex items-center gap-3 cursor-pointer" onclick="window.location.href='index'">
-                <div class="flex size-10 items-center justify-center rounded-lg bg-slate-900 text-white shadow-md ring-1 ring-slate-900/5">
-                    <span class="material-symbols-outlined text-[24px]">shutter_speed</span>
-                </div>
-                <div class="flex flex-col leading-none">
-                    <span class="font-display text-lg font-bold tracking-tight text-slate-900 uppercase">GDPARTSTUDIO</span>
-                    <span class="text-[10px] tracking-widest text-slate-500 uppercase font-medium">Visual Storytellers</span>
-                </div>
-            </div>
-
-            <!-- Navigation -->
-            <nav class="hidden md:flex flex-1 justify-center gap-10">
-                <a class="text-sm font-medium text-slate-500 hover:text-slate-900 transition-colors" href="index">Home</a>
-                <a class="text-sm font-medium text-slate-900 border-b-2 border-slate-900 pb-0.5" href="portfolio">Portfolio</a>
-                <a class="text-sm font-medium text-slate-500 hover:text-slate-900 transition-colors" href="services">Services</a>
-                <a class="text-sm font-medium text-slate-500 hover:text-slate-900 transition-colors" href="contact">Contact</a>
-            </nav>
-
-            <!-- CTA Button -->
-            <div class="flex items-center gap-4">
-                <button class="hidden sm:flex items-center justify-center rounded-full bg-slate-900 px-6 py-2.5 text-sm font-semibold text-white transition-all hover:bg-slate-800 shadow-sm hover:shadow-md">Get Quote</button>
-                <button class="md:hidden text-slate-900 p-2 hover:bg-slate-100 rounded-full transition-colors">
-                    <span class="material-symbols-outlined">menu</span>
-                </button>
-            </div>
-        </div>
-    </header>
+    <?php 
+        $currentPage = 'portfolio'; // Penanda menu aktif
+        include 'assets/components/navbar/navbar.php'; 
+    ?>
 
     <main class="flex-grow">
         <!-- HERO SECTION -->

@@ -58,34 +58,10 @@ include 'db.php'; // Koneksi database (untuk konsistensi sistem)
 <body class="bg-light-bg text-text-main font-body antialiased selection:bg-primary/20 selection:text-primary">
 
 <!-- NAVBAR -->
-<nav class="sticky top-0 z-50 w-full bg-white/80 backdrop-blur-xl border-b border-gray-100/50 supports-[backdrop-filter]:bg-white/60">
-    <div class="px-6 md:px-10 py-4 max-w-7xl mx-auto flex items-center justify-between">
-        <!-- Logo -->
-        <div class="flex items-center gap-3 cursor-pointer" onclick="window.location.href='index.php'">
-            <div class="h-10 w-auto flex items-center">
-                <img alt="GDPARTSTUDIO" class="h-full w-auto object-contain" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBTykEXOCCBGj6_47q2AzTHpZ8fQhCDD9udOMLINZg12_U6PcSXPy1Fowo5lxkgHUW1rBP_95QkE9J1afNCvHzQcM7NQ-chsrbribeyBzitk_vTi5N3Oba8whJ5aJqCZYUXHtA1hgLSSXnnbRatByfLqnfPnxEHG-vl-QynajBn839J_ucoI4KqexV_l0eMDJbEU8b9MthNX21BBNuInqY2-RUbZXSLIMzsBwo-YTMaKWa_oOBkCBim8zK2E-jCMnrNUIeS4E3Ujh8"/>
-            </div>
-            <h1 class="sr-only">GDPARTSTUDIO</h1>
-        </div>
-
-        <!-- Desktop Menu -->
-        <div class="hidden md:flex items-center gap-8">
-            <a class="text-sm font-medium text-text-muted hover:text-primary transition-colors" href="index.php">Beranda</a>
-            <a class="text-sm font-medium text-text-muted hover:text-primary transition-colors" href="portfolio.php">Portofolio</a>
-            <!-- Active State for Services -->
-            <a class="text-primary text-sm font-bold relative after:content-[''] after:absolute after:-bottom-1 after:left-0 after:w-full after:h-0.5 after:bg-primary after:rounded-full" href="services.php">Layanan</a>
-            <a class="text-sm font-medium text-text-muted hover:text-primary transition-colors" href="#contact">Kontak</a>
-        </div>
-
-        <!-- CTA & Mobile Menu -->
-        <button class="hidden md:flex items-center justify-center rounded-full h-10 px-6 bg-text-main text-white text-sm font-bold hover:bg-primary hover:shadow-lg hover:shadow-primary/25 transition-all duration-300">
-            Pesan Sekarang
-        </button>
-        <button class="md:hidden text-text-main hover:bg-gray-100 p-2 rounded-lg transition-colors">
-            <span class="material-symbols-outlined">menu</span>
-        </button>
-    </div>
-</nav>
+    <?php 
+        $currentPage = 'services'; 
+        include 'assets/components/navbar/navbar.php'; 
+    ?>
 
 <main class="flex flex-col min-h-screen">
     
