@@ -1,6 +1,26 @@
 <?php
 session_start();
 include '../../db.php';
+include 'log_helper.php';
+
+// Log
+if (isset($_GET['delete_id'])) {
+    $id = intval($_GET['delete_id']);
+    
+    // Ambil nama service dulu
+    $q = mysqli_query($conn, "SELECT name FROM services WHERE id=$id");
+    $d = mysqli_fetch_assoc($q);
+    $srv_name = $d['name'] ?? 'Unknown Service';
+
+    mysqli_query($conn, "DELETE FROM services WHERE id=$id");
+    
+    // --- LOG ---
+    writeLog($conn, $_SESSION['admin_id'], 'Delete', $srv_name, 'Menghapus layanan');
+    // -----------
+
+    header("Location: admin_services.php");
+    exit;
+}
 
 // 1. CEK LOGIN
 if (!isset($_SESSION['admin_logged_in']) || $_SESSION['admin_logged_in'] !== true) {

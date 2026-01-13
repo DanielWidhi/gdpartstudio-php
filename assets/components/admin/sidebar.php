@@ -73,10 +73,16 @@
             <span class="text-sm <?= $classText ?>">Nota</span>
         </a>
 
-        <!-- Settings (Placeholder) -->
-        <a href="#" class="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-[#f3f4f6] group transition-colors">
-            <span class="material-symbols-outlined text-[#4c669a] group-hover:text-[#0d121b]">settings</span>
-            <span class="text-[#4c669a] text-sm font-medium group-hover:text-[#0d121b]">Settings</span>
+        <!-- Settings Link -->
+        <?php 
+            $isActive = (isset($currentPage) && $currentPage == 'settings');
+            $classLink = $isActive ? 'bg-primary/10 text-primary' : 'hover:bg-[#f3f4f6] text-[#4c669a] group';
+            $classIcon = $isActive ? 'fill' : 'group-hover:text-[#0d121b]';
+            $classText = $isActive ? 'font-bold' : 'font-medium group-hover:text-[#0d121b]';
+        ?>
+        <a href="activity_log.php" class="flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors <?= $classLink ?>">
+            <span class="material-symbols-outlined <?= $classIcon ?>">settings</span>
+            <span class="text-sm <?= $classText ?>">Settings (Log)</span>
         </a>
 
     </nav>

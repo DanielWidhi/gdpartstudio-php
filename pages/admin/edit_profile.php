@@ -1,38 +1,43 @@
 <?php
 session_start();
 include '../../db.php';
+include 'log_helper.php'; // Include Helper Log
 
-// 1. Cek Login
+// 1. CEK LOGIN
 if (!isset($_SESSION['admin_logged_in']) || $_SESSION['admin_logged_in'] !== true) {
     header("Location: ../login.php");
     exit;
 }
 
-// 2. Ambil Data Admin Saat Ini
+// 2. AMBIL DATA ADMIN SAAT INI (Untuk ditampilkan di form)
 $admin_id = $_SESSION['admin_id'];
-$query = mysqli_query($conn, "SELECT * FROM admins WHERE id = $admin_id");
-$admin = mysqli_fetch_assoc($query);
+$query_get = mysqli_query($conn, "SELECT * FROM admins WHERE id = $admin_id");
+$admin = mysqli_fetch_assoc($query_get);
 
-// 3. Proses Update
+// 3. PROSES UPDATE (Hanya jalan jika tombol Simpan ditekan)
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $name = mysqli_real_escape_string($conn, $_POST['name']);
     $email = mysqli_real_escape_string($conn, $_POST['email']);
+    
+    // Input Password
     $current_password = $_POST['current_password'];
     $new_password = $_POST['new_password'];
     $confirm_password = $_POST['confirm_password'];
 
-    // Validasi Email Unik (Jika diganti)
-    if($email != $admin['email']){
+    // Validasi Email Unik (Jika email diganti)
+    if ($email != $admin['email']) {
         $cek = mysqli_query($conn, "SELECT id FROM admins WHERE email = '$email'");
-        if(mysqli_num_rows($cek) > 0){
-            echo "<script>alert('Email sudah digunakan!'); window.location='edit_profile.php';</script>";
+        if (mysqli_num_rows($cek) > 0) {
+            echo "<script>alert('Email sudah digunakan oleh admin lain!'); window.location='edit_profile.php';</script>";
             exit;
         }
     }
 
-    // Logic Ganti Password
+    $sql = ""; // Inisialisasi variabel query
+
+    // Cek apakah user ingin ganti password?
     if (!empty($new_password)) {
-        // Cek password lama
+        // Wajib masukkan password lama untuk keamanan
         if (password_verify($current_password, $admin['password'])) {
             if ($new_password === $confirm_password) {
                 $password_hash = password_hash($new_password, PASSWORD_DEFAULT);
@@ -42,7 +47,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 exit;
             }
         } else {
-            echo "<script>alert('Password saat ini salah!'); window.location='edit_profile.php';</script>";
+            echo "<script>alert('Password lama salah! Perubahan ditolak.'); window.location='edit_profile.php';</script>";
             exit;
         }
     } else {
@@ -50,13 +55,21 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         $sql = "UPDATE admins SET name='$name', email='$email' WHERE id=$admin_id";
     }
 
+    // Eksekusi Query
     if (mysqli_query($conn, $sql)) {
-        // Update Session
+        
+        // --- CATAT LOG ---
+        if (function_exists('writeLog')) {
+            writeLog($conn, $admin_id, 'Update', 'Profil Sendiri', 'Memperbarui informasi akun');
+        }
+
+        // Update Session agar nama di header langsung berubah
         $_SESSION['admin_name'] = $name;
         $_SESSION['admin_email'] = $email;
+
         echo "<script>alert('Profil Berhasil Diperbarui!'); window.location='profile.php';</script>";
     } else {
-        echo "<script>alert('Gagal update profil.');</script>";
+        echo "<script>alert('Gagal update database: " . mysqli_error($conn) . "');</script>";
     }
 }
 ?>
@@ -123,8 +136,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             </div>
             <div class="flex items-center gap-3">
                 <div class="text-right hidden sm:block">
-                    <p class="text-sm font-semibold text-[#0d121b]"><?= $admin['name'] ?></p>
-                    <p class="text-xs text-[#4c669a]"><?= $admin['email'] ?></p>
+                    <p class="text-sm font-semibold text-[#0d121b]"><?= $_SESSION['admin_name'] ?></p>
+                    <p class="text-xs text-[#4c669a]"><?= $_SESSION['admin_email'] ?></p>
                 </div>
                 <div class="w-10 h-10 rounded-full bg-gray-200 bg-cover bg-center border border-gray-300" style="background-image: url('../../assets/images/user-placeholder.jpg');"></div>
             </div>
@@ -149,20 +162,17 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                         </div>
                         <div class="p-6 space-y-6">
                             
-                            <!-- Foto Profil (UI Only) -->
+                            <!-- Foto Profil (UI Only - Opsional bisa diaktifkan nanti) -->
                             <div class="flex items-center gap-6">
                                 <div class="relative group">
                                     <div class="w-24 h-24 rounded-full bg-gray-200 bg-cover bg-center border-4 border-white shadow-md" style="background-image: url('../../assets/images/user-placeholder.jpg');"></div>
-                                    <button type="button" class="absolute bottom-0 right-0 bg-primary text-white p-1.5 rounded-full shadow-lg hover:bg-primary-hover transition-colors">
+                                    <div class="absolute bottom-0 right-0 bg-primary text-white p-1.5 rounded-full shadow-lg">
                                         <span class="material-symbols-outlined text-[18px]">photo_camera</span>
-                                    </button>
+                                    </div>
                                 </div>
                                 <div>
                                     <h4 class="text-sm font-semibold text-[#0d121b]">Foto Profil</h4>
-                                    <p class="text-xs text-[#4c669a] mt-1 mb-3">JPG, GIF, atau PNG. Maks 2MB.</p>
-                                    <div class="flex gap-2">
-                                        <button type="button" class="text-xs font-semibold px-4 py-2 bg-gray-100 text-[#0d121b] rounded-lg hover:bg-gray-200 transition-colors">Ganti Foto</button>
-                                    </div>
+                                    <p class="text-xs text-[#4c669a] mt-1 mb-3">Tampilan avatar.</p>
                                 </div>
                             </div>
 
@@ -192,7 +202,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                     <div class="bg-white rounded-xl border border-[#cfd7e7] shadow-sm">
                         <div class="p-6 border-b border-[#cfd7e7]">
                             <h3 class="text-base font-bold text-[#0d121b]">Ganti Password</h3>
-                            <p class="text-xs text-[#4c669a] mt-1">Kosongkan jika tidak ingin mengubah password.</p>
+                            <p class="text-xs text-[#4c669a] mt-1">Isi hanya jika ingin mengubah password.</p>
                         </div>
                         <div class="p-6 space-y-6">
                             <div class="flex flex-col gap-2 max-w-md">
@@ -200,6 +210,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                                 <div class="relative">
                                     <input name="current_password" class="w-full px-4 py-2.5 rounded-lg border-[#cfd7e7] text-sm focus:ring-primary focus:border-primary" placeholder="••••••••" type="password" id="current_pass"/>
                                 </div>
+                                <p class="text-xs text-red-500">*Wajib diisi jika mengganti password baru</p>
                             </div>
                             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                                 <div class="flex flex-col gap-2">

@@ -1,33 +1,35 @@
 <?php
 session_start();
 include '../../db.php';
+include_once 'log_helper.php'; // Include Helper Log
 
-// Cek Login
+// 1. Cek Login
 if (!isset($_SESSION['admin_logged_in']) || $_SESSION['admin_logged_in'] !== true) {
     header("Location: ../login.php");
     exit;
 }
 
-// Cek ID
+// 2. Cek ID
 if (!isset($_GET['id'])) {
     header("Location: manage_invoices.php");
     exit;
 }
 
 $id = intval($_GET['id']);
-$query = mysqli_query($conn, "SELECT * FROM invoices WHERE id = $id");
-$data = mysqli_fetch_assoc($query);
+
+// --- PERBAIKAN 1: Ganti nama variabel agar tidak bentrok ---
+$q_select = mysqli_query($conn, "SELECT * FROM invoices WHERE id = $id");
+$data = mysqli_fetch_assoc($q_select);
 
 if (!$data) { 
     echo "<script>alert('Data tidak ditemukan'); window.location='manage_invoices.php';</script>"; 
     exit; 
 }
 
-// Decode Items (Fix error json null)
+// Decode Items
 $items_json = isset($data['items_json']) ? $data['items_json'] : '[]';
 $items = json_decode($items_json, true);
 if (!is_array($items) || empty($items)) { 
-    // Fallback jika data lama belum punya items_json
     $items = [['desc' => 'Layanan Utama', 'price' => $data['total_amount'], 'qty' => 1]]; 
 }
 
@@ -60,17 +62,16 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     }
     $items_json = json_encode($items_array);
 
-    // --- LOGIKA BARU: HAPUS FILE PDF LAMA ---
-    // Agar saat didownload nanti, sistem generate ulang dengan data baru
+    // Hapus File PDF Lama agar digenerate ulang
     if (!empty($data['file_pdf'])) {
         $oldFilePath = "../../assets/invoice/" . $data['file_pdf'];
         if (file_exists($oldFilePath)) {
-            unlink($oldFilePath); // Hapus file dari folder
+            unlink($oldFilePath);
         }
     }
 
-    // Update Query (Set file_pdf = NULL)
-    $query = "UPDATE invoices SET 
+    // --- PERBAIKAN 2: Gunakan variabel $sql_update ---
+    $sql_update = "UPDATE invoices SET 
               client_name='$client_name', 
               client_email='$client_email', 
               client_phone='$client_phone',
@@ -86,8 +87,17 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
               file_pdf = NULL 
               WHERE id=$id";
     
-    if (mysqli_query($conn, $query)) {
-        echo "<script>alert('Update Berhasil! PDF lama telah direset.'); window.location='manage_invoices.php';</script>";
+    // Eksekusi
+    if (mysqli_query($conn, $sql_update)) {
+        
+        // Catat Log
+        if (function_exists('writeLog')) {
+            $admin_id = $_SESSION['admin_id'];
+            $inv_num = $data['invoice_number'];
+            writeLog($conn, $admin_id, 'Update', $inv_num, "Status diubah menjadi: $status");
+        }
+
+        echo "<script>alert('Update Berhasil!'); window.location='manage_invoices.php';</script>";
     } else {
         echo "<script>alert('Gagal Update: " . mysqli_error($conn) . "');</script>";
     }
@@ -102,8 +112,8 @@ $showTax = $data['tax_percent'] > 0;
 <html class="light" lang="en">
 <head>
     <meta charset="utf-8"/>
+    <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
     <title>Update Invoice - GDPARTSTUDIO</title>
-    <!-- CSS & Tailwind -->
     <link href="https://fonts.googleapis.com" rel="preconnect"/>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet"/>
     <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
@@ -127,7 +137,6 @@ $showTax = $data['tax_percent'] > 0;
 
     <main class="flex-1 flex flex-col h-full overflow-hidden relative md:ml-0 mt-14 md:mt-0">
         
-        <!-- Header -->
         <header class="h-16 bg-white border-b border-[#cfd7e7] flex items-center justify-between px-8 shrink-0">
             <div class="flex items-center gap-4">
                 <a href="manage_invoices.php" class="flex items-center gap-2 text-[#64748b] hover:text-primary transition-colors">
@@ -136,7 +145,6 @@ $showTax = $data['tax_percent'] > 0;
                 <h2 class="text-[#0d121b] text-lg font-bold">Update Nota <?= $data['invoice_number'] ?></h2>
             </div>
             
-            <!-- Tombol Download PDF -->
             <div class="flex items-center gap-3">
                 <a href="download_invoice.php?id=<?= $id ?>" target="_blank" class="flex items-center gap-2 px-4 py-2 bg-white border border-gray-300 rounded-lg text-sm font-bold hover:bg-gray-50 text-gray-700 transition-colors">
                     <span class="material-symbols-outlined text-[18px]">download</span> PDF
@@ -144,7 +152,6 @@ $showTax = $data['tax_percent'] > 0;
             </div>
         </header>
 
-        <!-- Form Content -->
         <div class="flex-1 overflow-y-auto bg-background-light p-4 md:p-8">
             <form method="POST" action="" class="max-w-[1000px] mx-auto flex flex-col gap-6 pb-12">
                 
@@ -174,7 +181,7 @@ $showTax = $data['tax_percent'] > 0;
                     <div class="bg-white border border-[#cfd7e7] rounded-xl p-6 shadow-sm">
                         <h3 class="font-bold text-[#0d121b] mb-4">Informasi Klien</h3>
                         <div class="space-y-4">
-                            <div><label class="text-xs font-bold text-gray-500">Nama</label><input name="client_name" class="w-full rounded-lg border-gray-300" value="<?= $data['client_name'] ?>" required></div>
+                            <div><label class="text-xs font-bold text-gray-500">Nama</label><input name="client_name" class="w-full rounded-lg border-gray-300" value="<?= $data['client_name'] ?>"></div>
                             <div><label class="text-xs font-bold text-gray-500">Nomor Telepon</label><input name="client_phone" class="w-full rounded-lg border-gray-300" value="<?= $data['client_phone'] ?>"></div>
                             <div><label class="text-xs font-bold text-gray-500">Email</label><input name="client_email" class="w-full rounded-lg border-gray-300" value="<?= $data['client_email'] ?>"></div>
                         </div>
@@ -188,7 +195,6 @@ $showTax = $data['tax_percent'] > 0;
                     </div>
                 </div>
 
-                <!-- Table Items -->
                 <div class="bg-white border border-[#cfd7e7] rounded-xl shadow-sm overflow-hidden">
                     <div class="p-6 border-b border-[#cfd7e7] flex justify-between items-center">
                         <h3 class="font-bold text-[#0d121b]">Daftar Layanan</h3>
@@ -212,7 +218,7 @@ $showTax = $data['tax_percent'] > 0;
                                     <td class="px-6 py-4"><input class="w-full border-none p-0 bg-transparent price-input" name="item_price[]" type="number" value="<?= $item['price'] ?>" oninput="calcTotal()"></td>
                                     <td class="px-6 py-4"><input class="w-full border-none p-0 bg-transparent text-center qty-input" name="item_qty[]" type="number" value="<?= $item['qty'] ?>" oninput="calcTotal()"></td>
                                     <td class="px-6 py-4 text-right"><span class="font-bold row-total">Rp 0</span></td>
-                                    <td class="px-6 py-4 text-right"><button type="button" onclick="this.closest('tr').remove(); calcTotal()" class="text-red-400 hover:text-red-600"><span class="material-symbols-outlined text-[20px]">delete</span></button></td>
+                                    <td class="px-6 py-4 text-right"><button type="button" onclick="this.closest('tr').remove(); calcTotal()" class="text-red-400"><span class="material-symbols-outlined">delete</span></button></td>
                                 </tr>
                                 <?php endforeach; ?>
                             </tbody>
@@ -220,29 +226,24 @@ $showTax = $data['tax_percent'] > 0;
                     </div>
                 </div>
 
-                <!-- Footer Calc -->
                 <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
                     <div class="lg:col-span-7">
                         <label class="text-xs font-bold text-gray-500 uppercase">Catatan</label>
                         <textarea name="notes" class="w-full mt-2 border-gray-300 rounded-lg p-3" rows="3"><?= $data['notes'] ?></textarea>
                     </div>
                     <div class="lg:col-span-5 bg-white border border-[#cfd7e7] rounded-xl p-6 shadow-sm flex flex-col gap-4">
-                        
                         <div class="flex justify-between"><span>Subtotal</span><span class="font-bold" id="displaySubtotal">Rp 0</span></div>
                         
-                        <!-- Toggle Buttons -->
                         <div class="flex gap-2 text-xs">
                             <button type="button" id="btn-add-discount" onclick="toggleSection('discount-row', true)" class="text-primary hover:underline font-bold flex items-center gap-1" style="<?= $showDiscount ? 'display:none' : '' ?>">+ Diskon</button>
                             <button type="button" id="btn-add-tax" onclick="toggleSection('tax-row', true)" class="text-primary hover:underline font-bold flex items-center gap-1" style="<?= $showTax ? 'display:none' : '' ?>">+ Pajak</button>
                         </div>
 
                         <div class="flex flex-col gap-2 border-y border-gray-100 py-4">
-                            <!-- Diskon Row -->
                             <div id="discount-row" class="<?= $showDiscount ? 'flex' : 'hidden' ?> justify-between items-center">
                                 <div class="flex items-center gap-2"><span class="text-gray-500">Diskon</span><input type="number" id="discountInput" class="w-24 border-gray-300 rounded p-1 text-right text-xs" value="<?= $data['discount_amount'] ?>" oninput="calcTotal()"></div>
                                 <div class="flex items-center gap-2"><span class="text-red-600 font-medium" id="displayDiscount">- Rp 0</span><button type="button" onclick="toggleSection('discount-row', false)" class="text-red-400"><span class="material-symbols-outlined text-[16px]">close</span></button></div>
                             </div>
-                            <!-- Pajak Row -->
                             <div id="tax-row" class="<?= $showTax ? 'flex' : 'hidden' ?> justify-between items-center">
                                 <div class="flex items-center gap-2"><span class="text-gray-500">Pajak</span><input type="number" id="taxInput" class="w-12 border-gray-300 rounded p-1 text-center text-xs" value="<?= $data['tax_percent'] ?>" oninput="calcTotal()"><span>%</span></div>
                                 <div class="flex items-center gap-2"><span class="text-gray-500 font-medium" id="displayTax">Rp 0</span><button type="button" onclick="toggleSection('tax-row', false)" class="text-red-400"><span class="material-symbols-outlined text-[16px]">close</span></button></div>
@@ -251,7 +252,6 @@ $showTax = $data['tax_percent'] > 0;
 
                         <div class="flex justify-between text-lg font-bold text-primary"><span>Total Akhir</span><span id="displayGrandTotal">Rp 0</span></div>
                         
-                        <!-- Hidden Inputs -->
                         <input type="hidden" name="input_subtotal" id="inputSubtotal">
                         <input type="hidden" name="input_discount" id="inputDiscount">
                         <input type="hidden" name="input_tax_percent" id="inputTaxPercent">
@@ -264,12 +264,10 @@ $showTax = $data['tax_percent'] > 0;
                     <a href="manage_invoices.php" class="px-6 py-2.5 rounded-lg border bg-white text-gray-500">Batal</a>
                     <button type="submit" class="px-6 py-2.5 rounded-lg bg-primary text-white font-bold shadow-md">Simpan Perubahan</button>
                 </div>
-
             </form>
         </div>
     </main>
 
-    <!-- JavaScript Kalkulasi -->
     <script>
         function formatRupiah(num) { return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(num); }
 

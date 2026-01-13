@@ -1,6 +1,7 @@
 <?php
 session_start();
 include '../../db.php';
+include_once 'log_helper.php'; // 1. INCLUDE HELPER LOG
 
 // 1. Cek Login
 if (!isset($_SESSION['admin_logged_in']) || $_SESSION['admin_logged_in'] !== true) {
@@ -12,20 +13,25 @@ if (!isset($_SESSION['admin_logged_in']) || $_SESSION['admin_logged_in'] !== tru
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $name = mysqli_real_escape_string($conn, $_POST['name']);
     $email = mysqli_real_escape_string($conn, $_POST['email']);
-    $password = $_POST['password']; // Password mentah
+    $password = $_POST['password']; 
     
-    // Hash Password
     $password_hash = password_hash($password, PASSWORD_DEFAULT);
 
-    // Cek Email Duplikat
     $cek = mysqli_query($conn, "SELECT id FROM admins WHERE email = '$email'");
     if(mysqli_num_rows($cek) > 0){
         echo "<script>alert('Email sudah terdaftar!');</script>";
     } else {
-        // Insert
         $query = "INSERT INTO admins (name, email, password) VALUES ('$name', '$email', '$password_hash')";
         
         if(mysqli_query($conn, $query)){
+            
+            // --- 2. CATAT KE LOG AKTIVITAS ---
+            if (function_exists('writeLog')) {
+                $detail = "Email: " . $email;
+                writeLog($conn, $_SESSION['admin_id'], 'Create', $name, 'Menambahkan admin baru');
+            }
+            // ---------------------------------
+
             echo "<script>alert('Admin Berhasil Ditambahkan!'); window.location='manage_admins.php';</script>";
         } else {
             echo "<script>alert('Gagal menambah admin: " . mysqli_error($conn) . "');</script>";
@@ -75,19 +81,18 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 </head>
 <body class="bg-background-light text-[#0d121b] flex h-screen overflow-hidden">
 
-    <!-- 1. INCLUDE SIDEBAR -->
+    <!-- INCLUDE SIDEBAR -->
     <?php 
-        $currentPage = 'settings'; // Set active menu ke Settings (atau bisa buat menu baru 'users')
+        $currentPage = 'settings'; 
         include '../../assets/components/admin/sidebar.php'; 
     ?>
 
-    <!-- 2. INCLUDE MOBILE HEADER -->
+    <!-- INCLUDE MOBILE HEADER -->
     <?php include '../../assets/components/admin/mobile_header.php'; ?>
 
     <!-- MAIN CONTENT -->
     <main class="flex-1 flex flex-col h-full overflow-hidden relative md:ml-0 mt-14 md:mt-0">
         
-        <!-- Header -->
         <header class="h-16 bg-white border-b border-[#cfd7e7] flex items-center justify-between px-8 shrink-0">
             <div class="flex items-center gap-2 text-sm text-[#4c669a]">
                 <a href="manage_admins.php" class="hover:text-primary">Settings</a>
@@ -103,21 +108,17 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             </div>
         </header>
 
-        <!-- Content -->
         <div class="flex-1 overflow-y-auto bg-background-light p-4 md:p-8">
             <div class="max-w-[700px] mx-auto flex flex-col gap-8 pb-12">
                 
-                <!-- Title -->
                 <div>
                     <h2 class="text-[#0d121b] text-[28px] font-bold leading-tight tracking-tight">Buat Profil Admin Baru</h2>
                     <p class="text-[#4c669a] text-sm font-normal mt-1">Tambahkan anggota tim baru untuk mengelola platform GDPARTSTUDIO.</p>
                 </div>
 
-                <!-- Form Card -->
                 <div class="bg-white rounded-xl border border-[#cfd7e7] shadow-sm overflow-hidden">
                     <form method="POST" action="" class="p-6 md:p-8 space-y-6">
                         
-                        <!-- Foto Profil (UI Only) -->
                         <div class="flex flex-col items-center justify-center pb-6 border-b border-[#f1f3f7]">
                             <div class="relative group cursor-pointer">
                                 <div class="w-24 h-24 rounded-full bg-gray-100 border-2 border-dashed border-[#cfd7e7] flex items-center justify-center overflow-hidden hover:bg-gray-50 transition">
@@ -133,7 +134,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                             </div>
                         </div>
 
-                        <!-- Input Fields -->
                         <div class="space-y-1.5">
                             <label class="text-sm font-semibold text-[#0d121b]" for="fullname">Nama Lengkap</label>
                             <input name="name" required class="w-full px-4 py-2.5 rounded-lg border-[#cfd7e7] bg-white text-sm focus:ring-primary focus:border-primary placeholder:text-[#94a3b8]" id="fullname" placeholder="Masukkan nama lengkap" type="text"/>
@@ -162,7 +162,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                             </select>
                         </div>
 
-                        <!-- Buttons -->
                         <div class="flex items-center gap-3 pt-6">
                             <button type="submit" class="flex-1 bg-primary hover:bg-primary-hover text-white text-sm font-bold py-3 px-6 rounded-lg transition-all shadow-md shadow-primary/10">
                                 Simpan Profil
@@ -174,7 +173,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
                     </form>
                     
-                    <!-- Info Box -->
                     <div class="bg-blue-50/50 p-6 border-t border-[#cfd7e7] flex gap-3">
                         <span class="material-symbols-outlined text-blue-600 text-[20px]">info</span>
                         <p class="text-xs text-[#4c669a] leading-relaxed">

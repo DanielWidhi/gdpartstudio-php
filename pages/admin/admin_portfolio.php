@@ -1,6 +1,32 @@
 <?php
 session_start();
 include '../../db.php';
+include 'log_helper.php';
+
+// Log
+if (isset($_GET['delete_id'])) {
+    $id = intval($_GET['delete_id']);
+    
+    // 1. Ambil data dulu (untuk Log & Hapus Gambar)
+    $q = mysqli_query($conn, "SELECT title, image_url FROM projects WHERE id=$id");
+    $data = mysqli_fetch_assoc($q);
+    $judul_proyek = $data['title'] ?? 'Unknown Project'; // Simpan judul
+
+    // 2. Hapus file fisik
+    if ($data && file_exists("../../" . $data['image_url'])) {
+        unlink("../../" . $data['image_url']);
+    }
+
+    // 3. Hapus Database
+    mysqli_query($conn, "DELETE FROM projects WHERE id=$id");
+    
+    // --- LOG (Panggil setelah hapus) ---
+    writeLog($conn, $_SESSION['admin_id'], 'Delete', $judul_proyek, 'Menghapus portfolio permanen');
+    // ----------------------------------
+
+    header("Location: admin_portfolio.php");
+    exit;
+}
 
 // 1. Cek Keamanan Login
 if (!isset($_SESSION['admin_logged_in']) || $_SESSION['admin_logged_in'] !== true) {

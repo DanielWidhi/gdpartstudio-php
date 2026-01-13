@@ -2,6 +2,11 @@
 session_start();
 include '../../db.php';
 
+// 1. INCLUDE HELPER LOG (Wajib agar bisa mencatat)
+// Asumsi file log_helper.php ada di folder yang sama (pages/admin/)
+include_once 'log_helper.php'; 
+
+// Cek Login
 if (!isset($_SESSION['admin_logged_in']) || $_SESSION['admin_logged_in'] !== true) {
     header("Location: ../login.php");
     exit;
@@ -13,10 +18,11 @@ $last_inv = mysqli_fetch_assoc($query_inv);
 $next_id = ($last_inv) ? $last_inv['id'] + 1 : 1;
 $invoice_number = "INV-" . date("ymd") . str_pad($next_id, 2, '0', STR_PAD_LEFT);
 
+// Proses Simpan
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $client_name = mysqli_real_escape_string($conn, $_POST['client_name']);
     $client_email = mysqli_real_escape_string($conn, $_POST['client_email']);
-    $client_phone = mysqli_real_escape_string($conn, $_POST['client_phone']); // Tambahan No Telp
+    $client_phone = mysqli_real_escape_string($conn, $_POST['client_phone']);
     $inv_date = $_POST['inv_date'];
     
     $subtotal = $_POST['input_subtotal'];
@@ -38,17 +44,29 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     }
     $items_json = json_encode($items_array);
 
-    // Query Insert dengan client_phone
+    // Query Insert Invoice
     $query = "INSERT INTO invoices (invoice_number, client_name, client_email, client_phone, invoice_date, total_amount, discount_amount, tax_percent, tax_amount, grand_total, status, notes, items_json) 
               VALUES ('$invoice_number', '$client_name', '$client_email', '$client_phone', '$inv_date', '$subtotal', '$discount_amount', '$tax_percent', '$tax_amount', '$grand_total', 'Pending', '$notes', '$items_json')";
     
     if (mysqli_query($conn, $query)) {
+        
+        // --- MULAI PENCATATAN LOG DISINI ---
+        if (function_exists('writeLog')) {
+            $admin_id = $_SESSION['admin_id'];
+            $detail_log = "Klien: $client_name | Total: Rp " . number_format($grand_total, 0, ',', '.');
+            
+            // Panggil fungsi: (Koneksi, ID Admin, Tipe Aksi, Target, Detail)
+            writeLog($conn, $admin_id, 'Create', $invoice_number, $detail_log);
+        }
+        // -----------------------------------
+
         echo "<script>alert('Nota Berhasil Dibuat!'); window.location='manage_invoices.php';</script>";
     } else {
         echo "<script>alert('Gagal: " . mysqli_error($conn) . "');</script>";
     }
 }
 ?>
+
 
 <!DOCTYPE html>
 <html class="light" lang="en">

@@ -1,6 +1,10 @@
 <?php
 session_start();
+// Naik 2 level untuk db.php (pages/admin/ -> pages/ -> root)
 include '../../db.php';
+
+// Helper ada di folder yang sama, jadi langsung panggil namanya
+include 'log_helper.php'; 
 
 // 1. CEK LOGIN
 if (!isset($_SESSION['admin_logged_in']) || $_SESSION['admin_logged_in'] !== true) {
@@ -8,20 +12,29 @@ if (!isset($_SESSION['admin_logged_in']) || $_SESSION['admin_logged_in'] !== tru
     exit;
 }
 
-// 2. LOGIKA TAMBAH ADMIN
+// 2. LOGIKA TAMBAH ADMIN (CREATE)
 if (isset($_POST['add_admin'])) {
     $name = mysqli_real_escape_string($conn, $_POST['name']);
     $email = mysqli_real_escape_string($conn, $_POST['email']);
-    // Password default: admin123 (hash)
+    
+    // Password default: admin123
     $password = password_hash('admin123', PASSWORD_DEFAULT);
     
     // Cek email duplikat
     $cek = mysqli_query($conn, "SELECT id FROM admins WHERE email = '$email'");
+    
     if(mysqli_num_rows($cek) > 0){
         echo "<script>alert('Email sudah terdaftar!');</script>";
     } else {
-        $query = "INSERT INTO admins (name, email, password) VALUES ('$name', '$email', '$password')";
-        if(mysqli_query($conn, $query)){
+        $sql_insert = "INSERT INTO admins (name, email, password) VALUES ('$name', '$email', '$password')";
+        
+        if(mysqli_query($conn, $sql_insert)){
+            // --- LOG ---
+            // Cek function exists untuk menghindari error jika helper bermasalah
+            if (function_exists('writeLog')) {
+                writeLog($conn, $_SESSION['admin_id'], 'Create', $name, 'Mendaftarkan admin baru');
+            }
+            
             echo "<script>alert('Admin berhasil ditambahkan! Password default: admin123'); window.location='manage_admins.php';</script>";
         } else {
             echo "<script>alert('Gagal menambah admin.');</script>";
@@ -29,7 +42,7 @@ if (isset($_POST['add_admin'])) {
     }
 }
 
-// 3. LOGIKA HAPUS ADMIN
+// 3. LOGIKA HAPUS ADMIN (DELETE)
 if (isset($_GET['delete_id'])) {
     $id = intval($_GET['delete_id']);
     
@@ -37,20 +50,33 @@ if (isset($_GET['delete_id'])) {
     if($id == $_SESSION['admin_id']){
         echo "<script>alert('Anda tidak bisa menghapus akun sendiri!'); window.location='manage_admins.php';</script>";
     } else {
-        mysqli_query($conn, "DELETE FROM admins WHERE id=$id");
-        header("Location: manage_admins.php");
-        exit;
+        // Ambil nama untuk log
+        $q_cek = mysqli_query($conn, "SELECT name FROM admins WHERE id=$id");
+        $d_cek = mysqli_fetch_assoc($q_cek);
+        $adm_name = $d_cek['name'] ?? 'Unknown Admin';
+
+        $sql_delete = "DELETE FROM admins WHERE id=$id";
+        
+        if(mysqli_query($conn, $sql_delete)){
+            // --- LOG ---
+            if (function_exists('writeLog')) {
+                writeLog($conn, $_SESSION['admin_id'], 'Delete', $adm_name, 'Menghapus akun admin');
+            }
+            
+            header("Location: manage_admins.php");
+            exit;
+        }
     }
 }
 
-// 4. LOGIKA SEARCH
+// 4. LOGIKA SEARCH & TAMPIL DATA (READ)
 $search = isset($_GET['search']) ? mysqli_real_escape_string($conn, $_GET['search']) : '';
 $whereClause = "";
+
 if($search) {
     $whereClause = "WHERE name LIKE '%$search%' OR email LIKE '%$search%'";
 }
 
-// Query Data
 $query = "SELECT * FROM admins $whereClause ORDER BY id ASC";
 $result = mysqli_query($conn, $query);
 $total_rows = mysqli_num_rows($result);
@@ -130,8 +156,8 @@ function getInitials($name){
             </div>
             <div class="flex items-center gap-3">
                 <div class="text-right hidden sm:block">
-                    <p class="text-sm font-semibold text-[#0d121b]"><?= $_SESSION['admin_name'] ?></p>
-                    <p class="text-xs text-[#4c669a]"><?= $_SESSION['admin_email'] ?></p>
+                    <p class="text-sm font-semibold text-[#0d121b]"><?= $_SESSION['admin_name'] ?? 'Admin' ?></p>
+                    <p class="text-xs text-[#4c669a]"><?= $_SESSION['admin_email'] ?? '' ?></p>
                 </div>
                 <div class="w-10 h-10 rounded-full bg-gray-200 bg-cover bg-center border border-gray-300" style="background-image: url('../../assets/images/user-placeholder.jpg');"></div>
             </div>
@@ -152,9 +178,11 @@ function getInitials($name){
                             <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-[#94a3b8]">search</span>
                             <input name="search" value="<?= $search ?>" class="pl-10 pr-4 py-2.5 w-full md:w-64 rounded-lg border-[#cfd7e7] bg-white text-sm focus:ring-primary focus:border-primary placeholder:text-[#94a3b8]" placeholder="Cari admin..." type="text"/>
                         </form>
+                        
+                        <!-- Tombol Tambah Admin (Link ke halaman create) -->
                         <a href="create_profile.php" class="flex items-center gap-2 bg-primary hover:bg-primary-hover text-white text-sm font-bold py-2.5 px-5 rounded-lg transition-all shadow-md whitespace-nowrap">
                             <span class="material-symbols-outlined text-[20px]">add</span>
-                                Tambah Admin Baru
+                            Tambah Admin Baru
                         </a>
                     </div>
                 </div>
@@ -178,7 +206,6 @@ function getInitials($name){
                                     <?php while($row = mysqli_fetch_assoc($result)): ?>
                                         <tr class="hover:bg-gray-50/50 transition-colors">
                                             <td class="px-6 py-4">
-                                                <!-- Avatar Initials -->
                                                 <div class="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center text-[#4c669a] font-bold text-xs border border-gray-200">
                                                     <?= getInitials($row['name']) ?>
                                                 </div>
@@ -199,31 +226,31 @@ function getInitials($name){
                                                 </span>
                                             </td>
                                             <td class="px-6 py-4 text-right">
-    <div class="flex items-center justify-end gap-2">
-        
-        <!-- Tombol READ (Lihat Detail) -->
-        <a href="profile.php?id=<?= $row['id'] ?>" class="p-2 text-[#4c669a] hover:bg-gray-100 rounded-lg transition-colors" title="Lihat Detail">
-            <span class="material-symbols-outlined">visibility</span>
-        </a>
+                                                <div class="flex items-center justify-end gap-2">
+                                                    
+                                                    <!-- Read Detail -->
+                                                    <a href="profile.php?id=<?= $row['id'] ?>" class="p-2 text-[#4c669a] hover:bg-gray-100 rounded-lg transition-colors" title="Lihat Detail">
+                                                        <span class="material-symbols-outlined">visibility</span>
+                                                    </a>
 
-        <!-- Tombol EDIT -->
-        <a href="edit_profile.php?id=<?= $row['id'] ?>" class="p-2 text-[#4c669a] hover:bg-gray-100 rounded-lg transition-colors" title="Edit">
-            <span class="material-symbols-outlined">edit</span>
-        </a>
+                                                    <!-- Edit -->
+                                                    <a href="edit_profile.php?id=<?= $row['id'] ?>" class="p-2 text-[#4c669a] hover:bg-gray-100 rounded-lg transition-colors" title="Edit">
+                                                        <span class="material-symbols-outlined">edit</span>
+                                                    </a>
 
-        <!-- Tombol DELETE (Logic lama tetap ada) -->
-        <?php if($row['id'] != $_SESSION['admin_id']): ?>
-            <a href="manage_admins.php?delete_id=<?= $row['id'] ?>" onclick="return confirm('Hapus admin ini?')" class="p-2 text-red-500 hover:bg-red-50 rounded-lg transition-colors" title="Hapus">
-                <span class="material-symbols-outlined">delete</span>
-            </a>
-        <?php else: ?>
-            <span class="p-2 text-gray-300 cursor-not-allowed" title="Akun Sendiri">
-                <span class="material-symbols-outlined">delete</span>
-            </span>
-        <?php endif; ?>
+                                                    <!-- Delete -->
+                                                    <?php if($row['id'] != $_SESSION['admin_id']): ?>
+                                                        <a href="manage_admins.php?delete_id=<?= $row['id'] ?>" onclick="return confirm('Hapus admin ini?')" class="p-2 text-red-500 hover:bg-red-50 rounded-lg transition-colors" title="Hapus">
+                                                            <span class="material-symbols-outlined">delete</span>
+                                                        </a>
+                                                    <?php else: ?>
+                                                        <span class="p-2 text-gray-300 cursor-not-allowed" title="Anda (Aktif)">
+                                                            <span class="material-symbols-outlined">delete</span>
+                                                        </span>
+                                                    <?php endif; ?>
 
-    </div>
-</td>
+                                                </div>
+                                            </td>
                                         </tr>
                                     <?php endwhile; ?>
                                 <?php else: ?>
@@ -235,48 +262,14 @@ function getInitials($name){
                         </table>
                     </div>
                     
-                    <!-- Pagination Footer -->
                     <div class="px-6 py-4 border-t border-[#cfd7e7] flex items-center justify-between bg-gray-50/50">
-                        <p class="text-xs text-[#4c669a]">Menampilkan <?= $total_rows ?> dari <?= $total_rows ?> admin terdaftar</p>
-                        <div class="flex items-center gap-1">
-                            <button class="w-8 h-8 rounded border border-primary bg-primary text-white text-xs font-bold">1</button>
-                        </div>
+                        <p class="text-xs text-[#4c669a]">Menampilkan <?= $total_rows ?> admin terdaftar</p>
                     </div>
                 </div>
 
             </div>
         </div>
     </main>
-
-    <!-- MODAL ADD ADMIN -->
-    <div id="modalAddAdmin" class="hidden fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4">
-        <div class="bg-white rounded-xl shadow-xl w-full max-w-md overflow-hidden">
-            <div class="px-6 py-4 border-b border-gray-100 flex justify-between items-center">
-                <h3 class="text-lg font-bold text-[#0d121b]">Tambah Admin Baru</h3>
-                <button onclick="document.getElementById('modalAddAdmin').classList.add('hidden')" class="text-gray-400 hover:text-gray-600">
-                    <span class="material-symbols-outlined">close</span>
-                </button>
-            </div>
-            <form method="POST" action="" class="p-6 space-y-4">
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">Nama Lengkap</label>
-                    <input type="text" name="name" required class="w-full rounded-lg border-gray-300 focus:ring-primary focus:border-primary text-sm" placeholder="Contoh: Budi Santoso">
-                </div>
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">Alamat Email</label>
-                    <input type="email" name="email" required class="w-full rounded-lg border-gray-300 focus:ring-primary focus:border-primary text-sm" placeholder="email@domain.com">
-                </div>
-                <div class="p-3 bg-blue-50 text-blue-700 text-xs rounded-lg flex items-start gap-2">
-                    <span class="material-symbols-outlined text-[16px] mt-0.5">info</span>
-                    Password default untuk admin baru adalah <b>admin123</b>. Harap minta admin untuk segera mengganti password setelah login.
-                </div>
-                <div class="flex justify-end gap-3 pt-2">
-                    <button type="button" onclick="document.getElementById('modalAddAdmin').classList.add('hidden')" class="px-4 py-2 border rounded-lg text-gray-600 hover:bg-gray-50 text-sm font-medium">Batal</button>
-                    <button type="submit" name="add_admin" class="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary-hover text-sm font-bold">Simpan</button>
-                </div>
-            </form>
-        </div>
-    </div>
 
 </body>
 </html>

@@ -1,29 +1,56 @@
 <?php
 session_start();
 include '../../db.php';
+include 'log_helper.php'; // Pastikan helper ini ada di folder yang sama
 
-// Cek Login
+// 1. Cek Login
 if (!isset($_SESSION['admin_logged_in']) || $_SESSION['admin_logged_in'] !== true) {
     header("Location: ../login.php");
     exit;
 }
 
-// Logika Delete
+// 2. Logika Delete & Log (DIGABUNG DISINI)
 if (isset($_GET['delete_id'])) {
     $id = intval($_GET['delete_id']);
-    mysqli_query($conn, "DELETE FROM invoices WHERE id=$id");
+    
+    // A. Ambil Data Dulu (Penting untuk Log & Hapus File)
+    $q_cek = mysqli_query($conn, "SELECT invoice_number, file_pdf FROM invoices WHERE id=$id");
+    $data = mysqli_fetch_assoc($q_cek);
+    
+    // Simpan info untuk log
+    $inv_num = $data['invoice_number'] ?? 'Unknown Invoice';
+
+    // B. Hapus File PDF Fisik jika ada (Agar server bersih)
+    if (!empty($data['file_pdf'])) {
+        $filePath = "../../assets/invoice/" . $data['file_pdf'];
+        if (file_exists($filePath)) {
+            unlink($filePath);
+        }
+    }
+
+    // C. Hapus Data dari Database
+    $query_delete = "DELETE FROM invoices WHERE id=$id";
+
+    if (mysqli_query($conn, $query_delete)) {
+        // D. Catat Log (Hanya jika delete berhasil)
+        if (function_exists('writeLog')) {
+            writeLog($conn, $_SESSION['admin_id'], 'Delete', $inv_num, 'Menghapus data invoice');
+        }
+    }
+
+    // E. Redirect
     header("Location: manage_invoices.php");
     exit;
 }
 
-// Logika Search
+// 3. Logika Search
 $search = isset($_GET['search']) ? mysqli_real_escape_string($conn, $_GET['search']) : '';
 $whereClause = "";
 if($search) {
     $whereClause = "WHERE invoice_number LIKE '%$search%' OR client_name LIKE '%$search%'";
 }
 
-// Query Data
+// 4. Query Data Utama
 $query = "SELECT * FROM invoices $whereClause ORDER BY invoice_date DESC";
 $result = mysqli_query($conn, $query);
 $total_rows = mysqli_num_rows($result);
