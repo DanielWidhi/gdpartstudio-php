@@ -121,7 +121,7 @@ $q_recent = mysqli_query($conn, "SELECT * FROM projects ORDER BY created_at DESC
                         <div class="flex flex-col md:flex-row md:items-end justify-between gap-4">
                             <div>
                                 <h2 class="text-[#0d121b] text-[32px] font-bold leading-tight tracking-tight">Dashboard Ringkasan</h2>
-                                <p class="text-[#4c669a] text-sm font-normal mt-1">Selamat datang kembali! Berikut ringkasan performa hari ini.</p>
+                                <p class="text-[#4c669a] text-sm font-normal mt-1">Selamat datang kembali <?= $_SESSION['admin_name']  ?>! Berikut ringkasan performa hari ini.</p>
                             </div>
                         </div>
 
