@@ -55,6 +55,18 @@
             <span class="text-sm <?= $classText ?>">Daftar Admin</span>
         </a>
 
+        <!-- Invoice Link -->
+        <?php 
+            $isActive = (isset($currentPage) && $currentPage == 'invoices');
+            $classLink = $isActive ? 'bg-primary/10 text-primary' : 'hover:bg-[#f3f4f6] text-[#4c669a] group';
+            $classIcon = $isActive ? 'fill' : 'group-hover:text-[#0d121b]';
+            $classText = $isActive ? 'font-bold' : 'font-medium group-hover:text-[#0d121b]';
+        ?>
+        <a href="manage_invoices.php" class="flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors <?= $classLink ?>">
+            <span class="material-symbols-outlined <?= $classIcon ?>">receipt_long</span>
+            <span class="text-sm <?= $classText ?>">Nota</span>
+        </a>
+
         <!-- Settings (Placeholder) -->
         <a href="#" class="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-[#f3f4f6] group transition-colors">
             <span class="material-symbols-outlined text-[#4c669a] group-hover:text-[#0d121b]">settings</span>
