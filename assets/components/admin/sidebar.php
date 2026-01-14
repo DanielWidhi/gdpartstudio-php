@@ -2,88 +2,88 @@
 <aside class="w-64 bg-white border-r border-[#cfd7e7] flex flex-col h-full shrink-0 z-20 hidden md:flex">
     <!-- Logo Area -->
     <div class="p-6 flex items-center gap-3">
-        <!-- Logo Image -->
         <div class="h-8 w-auto flex items-center justify-center">
-            <!-- Pastikan path logo sesuai dengan preferensi Anda -->
             <img src="../../assets/images/Logo2b.png" alt="Logo" class="h-full w-auto object-contain rounded p-1">
         </div>
         <h1 class="text-[#0d121b] text-base font-bold tracking-tight">GDPARTSTUDIO</h1>
     </div>
 
-    <!-- Navigation Menu -->
+    <!-- Navigation Menu (Menggunakan Array PHP) -->
     <nav class="flex flex-col gap-1 px-3 mt-2 flex-1">
         
-        <!-- Dashboard (Placeholder) -->
         <?php 
-            $isActive = (isset($currentPage) && $currentPage == 'dashboard');
-            $classLink = $isActive ? 'bg-primary/10 text-primary' : 'hover:bg-[#f3f4f6] text-[#4c669a] group';
-            $classIcon = $isActive ? 'fill' : 'group-hover:text-[#0d121b]';
-            $classText = $isActive ? 'font-bold' : 'font-medium group-hover:text-[#0d121b]';
-        ?>
-        <a href="admindashboard.php" class="flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors <?= $classLink ?>">
-            <span class="material-symbols-outlined <?= $classIcon ?>">dashboard</span>
-            <span class="text-sm <?= $classText ?>">Dashboard</span>
-        </a>
+        // Definisi Daftar Menu
+        $menus = [
+            [
+                'id'    => 'dashboard',
+                'label' => 'Dashboard',
+                'icon'  => 'dashboard',
+                'link'  => 'admindashboard.php'
+            ],
+            [
+                'id'    => 'weather',
+                'label' => 'Weather',
+                'icon'  => 'cloud',
+                'link'  => 'weather.php'
+            ],
+            [
+                'id'    => 'portfolio',
+                'label' => 'Portfolio',
+                'icon'  => 'inventory_2',
+                'link'  => 'admin_portfolio.php'
+            ],
+            [
+                'id'    => 'services',
+                'label' => 'Services',
+                'icon'  => 'handshake',
+                'link'  => 'admin_services.php'
+            ],
+            [
+                'id'    => 'admins',
+                'label' => 'Daftar Admin',
+                'icon'  => 'group',
+                'link'  => 'manage_admins.php'
+            ],
+            [
+                'id'    => 'invoices',
+                'label' => 'Nota',
+                'icon'  => 'receipt_long',
+                'link'  => 'manage_invoices.php'
+            ],
+            [
+                'id'    => 'settings',
+                'label' => 'Settings (Log)',
+                'icon'  => 'settings',
+                'link'  => 'activity_log.php'
+            ]
+        ];
 
-        <!-- Portfolio Link -->
-        <?php 
-            $isActive = (isset($currentPage) && $currentPage == 'portfolio');
-            $classLink = $isActive ? 'bg-primary/10 text-primary' : 'hover:bg-[#f3f4f6] text-[#4c669a] group';
-            $classIcon = $isActive ? 'fill' : 'group-hover:text-[#0d121b]';
-            $classText = $isActive ? 'font-bold' : 'font-medium group-hover:text-[#0d121b]';
-        ?>
-        <a href="admin_portfolio.php" class="flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors <?= $classLink ?>">
-            <span class="material-symbols-outlined <?= $classIcon ?>">inventory_2</span>
-            <span class="text-sm <?= $classText ?>">Portfolio</span>
-        </a>
+        // Looping Menu
+        foreach ($menus as $menu) {
+            // Cek apakah menu ini yang sedang aktif
+            $isActive = (isset($currentPage) && $currentPage == $menu['id']);
 
-        <!-- Services Link -->
-        <?php 
-            $isActive = (isset($currentPage) && $currentPage == 'services');
-            $classLink = $isActive ? 'bg-primary/10 text-primary' : 'hover:bg-[#f3f4f6] text-[#4c669a] group';
-            $classIcon = $isActive ? 'fill' : 'group-hover:text-[#0d121b]';
-            $classText = $isActive ? 'font-bold' : 'font-medium group-hover:text-[#0d121b]';
-        ?>
-        <a href="admin_services.php" class="flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors <?= $classLink ?>">
-            <span class="material-symbols-outlined <?= $classIcon ?>">handshake</span>
-            <span class="text-sm <?= $classText ?>">Services</span>
-        </a>
+            // Tentukan Class CSS berdasarkan status aktif
+            $classLink = $isActive 
+                ? 'bg-primary/10 text-primary' 
+                : 'hover:bg-[#f3f4f6] text-[#4c669a] group';
+            
+            $classIcon = $isActive 
+                ? 'fill' 
+                : 'group-hover:text-[#0d121b]';
+            
+            $classText = $isActive 
+                ? 'font-bold' 
+                : 'font-medium group-hover:text-[#0d121b]';
+            ?>
+            
+            <!-- Cetak HTML Menu -->
+            <a href="<?= $menu['link'] ?>" class="flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors <?= $classLink ?>">
+                <span class="material-symbols-outlined <?= $classIcon ?>"><?= $menu['icon'] ?></span>
+                <span class="text-sm <?= $classText ?>"><?= $menu['label'] ?></span>
+            </a>
 
-        <!-- Daftar Admin Link (BARU) -->
-        <?php 
-            $isActive = (isset($currentPage) && $currentPage == 'admins');
-            $classLink = $isActive ? 'bg-primary/10 text-primary' : 'hover:bg-[#f3f4f6] text-[#4c669a] group';
-            $classIcon = $isActive ? 'fill' : 'group-hover:text-[#0d121b]';
-            $classText = $isActive ? 'font-bold' : 'font-medium group-hover:text-[#0d121b]';
-        ?>
-        <a href="manage_admins.php" class="flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors <?= $classLink ?>">
-            <span class="material-symbols-outlined <?= $classIcon ?>">group</span>
-            <span class="text-sm <?= $classText ?>">Daftar Admin</span>
-        </a>
-
-        <!-- Invoice Link -->
-        <?php 
-            $isActive = (isset($currentPage) && $currentPage == 'invoices');
-            $classLink = $isActive ? 'bg-primary/10 text-primary' : 'hover:bg-[#f3f4f6] text-[#4c669a] group';
-            $classIcon = $isActive ? 'fill' : 'group-hover:text-[#0d121b]';
-            $classText = $isActive ? 'font-bold' : 'font-medium group-hover:text-[#0d121b]';
-        ?>
-        <a href="manage_invoices.php" class="flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors <?= $classLink ?>">
-            <span class="material-symbols-outlined <?= $classIcon ?>">receipt_long</span>
-            <span class="text-sm <?= $classText ?>">Nota</span>
-        </a>
-
-        <!-- Settings Link -->
-        <?php 
-            $isActive = (isset($currentPage) && $currentPage == 'settings');
-            $classLink = $isActive ? 'bg-primary/10 text-primary' : 'hover:bg-[#f3f4f6] text-[#4c669a] group';
-            $classIcon = $isActive ? 'fill' : 'group-hover:text-[#0d121b]';
-            $classText = $isActive ? 'font-bold' : 'font-medium group-hover:text-[#0d121b]';
-        ?>
-        <a href="activity_log.php" class="flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors <?= $classLink ?>">
-            <span class="material-symbols-outlined <?= $classIcon ?>">settings</span>
-            <span class="text-sm <?= $classText ?>">Settings (Log)</span>
-        </a>
+        <?php } ?>
 
     </nav>
 
