@@ -8,20 +8,22 @@ if (!isset($_SESSION['admin_logged_in']) || $_SESSION['admin_logged_in'] !== tru
     exit;
 }
 
-// 2. Query Data Log (Join dengan tabel admins untuk dapat nama & foto)
-$query = "SELECT log.*, adm.name as admin_name 
+// 2. Query Data Log
+$query = "SELECT log.*, adm.name as admin_name, adm.email as admin_email 
           FROM activity_logs log 
-          JOIN admins adm ON log.admin_id = adm.id 
+          LEFT JOIN admins adm ON log.admin_id = adm.id 
           ORDER BY log.created_at DESC";
-$result = mysqli_query($conn, $query);
-$total_rows = mysqli_num_rows($result);
 
-// Helper untuk Badge Warna
+$result = mysqli_query($conn, $query);
+$total_rows = mysqli_num_rows($result); // <-- Variabel yang tadinya hilang
+
+// Helper Warna
 function getBadgeColor($action) {
     switch ($action) {
         case 'Create': return 'bg-green-50 text-green-700 border-green-100 dot-green';
         case 'Delete': return 'bg-red-50 text-red-700 border-red-100 dot-red';
         case 'Update': return 'bg-blue-50 text-blue-700 border-blue-100 dot-blue';
+        case 'Login Failed': return 'bg-red-100 text-red-800 border-red-200 dot-red'; 
         default: return 'bg-orange-50 text-orange-700 border-orange-100 dot-orange';
     }
 }
@@ -77,18 +79,15 @@ function getDeviceIcon($device) {
 </head>
 <body class="bg-background-light text-[#0d121b] flex h-screen overflow-hidden">
 
-    <!-- SIDEBAR -->
     <?php 
         $currentPage = 'settings'; 
         include '../../assets/components/admin/sidebar.php'; 
     ?>
 
-    <!-- MOBILE HEADER -->
     <?php include '../../assets/components/admin/mobile_header.php'; ?>
 
     <main class="flex-1 flex flex-col h-full overflow-hidden relative md:ml-0 mt-14 md:mt-0">
         
-        <!-- HEADER -->
         <header class="h-16 bg-white border-b border-[#cfd7e7] flex items-center justify-between px-8 shrink-0">
             <div class="flex items-center gap-2 text-sm">
                 <span class="text-[#4c669a]">Settings</span>
@@ -104,46 +103,16 @@ function getDeviceIcon($device) {
             </div>
         </header>
 
-        <!-- CONTENT -->
         <div class="flex-1 overflow-y-auto bg-background-light p-4 md:p-8">
             <div class="max-w-[1400px] mx-auto flex flex-col gap-6">
                 
-                <!-- Title & Export -->
                 <div class="flex flex-col md:flex-row md:items-end justify-between gap-4">
                     <div>
                         <h2 class="text-[#0d121b] text-[32px] font-bold leading-tight tracking-tight">System Activity Log</h2>
-                        <p class="text-[#4c669a] text-sm font-normal mt-1">Audit security logs including device and browser details for comprehensive system monitoring.</p>
-                    </div>
-                    <button class="inline-flex items-center justify-center gap-2 bg-primary hover:bg-primary-hover text-white px-5 py-2.5 rounded-lg text-sm font-semibold transition-all shadow-sm">
-                        <span class="material-symbols-outlined text-[20px]">download</span> Ekspor Data
-                    </button>
-                </div>
-
-                <!-- Filters -->
-                <div class="grid grid-cols-1 lg:grid-cols-4 gap-4 bg-white p-5 rounded-xl border border-[#cfd7e7] shadow-sm">
-                    <div class="flex flex-col gap-1.5">
-                        <label class="text-xs font-semibold text-[#64748b] uppercase tracking-wider">Filter Admin</label>
-                        <select class="block w-full border border-[#e2e8f0] rounded-lg text-sm bg-[#f8fafc] focus:ring-2 focus:ring-primary/20">
-                            <option>All Admins</option>
-                            <option>Admin User</option>
-                        </select>
-                    </div>
-                    <div class="flex flex-col gap-1.5 lg:col-span-2">
-                        <label class="text-xs font-semibold text-[#64748b] uppercase tracking-wider">Date Range</label>
-                        <div class="flex items-center gap-2">
-                            <input class="block w-full border border-[#e2e8f0] rounded-lg text-sm bg-[#f8fafc]" type="date"/>
-                            <span class="text-[#9ca3af]">to</span>
-                            <input class="block w-full border border-[#e2e8f0] rounded-lg text-sm bg-[#f8fafc]" type="date"/>
-                        </div>
-                    </div>
-                    <div class="flex items-end">
-                        <button class="w-full bg-white border border-[#cfd7e7] hover:bg-[#f8fafc] text-[#4c669a] px-4 py-2 rounded-lg text-sm font-medium transition-colors flex items-center justify-center gap-2">
-                            <span class="material-symbols-outlined text-[18px]">filter_alt_off</span> Reset Filters
-                        </button>
+                        <p class="text-[#4c669a] text-sm font-normal mt-1">Audit security logs including device and browser details.</p>
                     </div>
                 </div>
 
-                <!-- Table -->
                 <div class="bg-white border border-[#cfd7e7] rounded-xl shadow-sm overflow-hidden">
                     <div class="overflow-x-auto">
                         <table class="w-full text-left border-collapse">
@@ -162,39 +131,44 @@ function getDeviceIcon($device) {
                                 <?php if($total_rows > 0): ?>
                                 <?php while($row = mysqli_fetch_assoc($result)): ?>
                                 <tr class="hover:bg-[#f8fafc] transition-colors">
-                                    
-                                    <!-- Waktu -->
                                     <td class="px-6 py-4 align-middle">
                                         <p class="text-[#0d121b] text-sm font-medium"><?= date('M d, Y', strtotime($row['created_at'])) ?></p>
                                         <p class="text-[#64748b] text-xs"><?= date('H:i:s', strtotime($row['created_at'])) ?></p>
                                     </td>
 
-                                    <!-- Admin -->
                                     <td class="px-6 py-4 align-middle">
                                         <div class="flex items-center gap-3">
-                                            <div class="w-8 h-8 rounded-full bg-gray-200 border border-gray-300 flex items-center justify-center text-xs font-bold text-gray-500">
-                                                <?= strtoupper(substr($row['admin_name'], 0, 2)) ?>
-                                            </div>
-                                            <span class="text-[#0d121b] text-sm font-medium"><?= $row['admin_name'] ?></span>
+                                            <?php if ($row['admin_name']): ?>
+                                                <div class="w-8 h-8 rounded-full bg-gray-200 border border-gray-300 flex items-center justify-center text-xs font-bold text-gray-500">
+                                                    <?= strtoupper(substr($row['admin_name'], 0, 2)) ?>
+                                                </div>
+                                                <span class="text-[#0d121b] text-sm font-medium"><?= $row['admin_name'] ?></span>
+                                            <?php else: ?>
+                                                <div class="w-8 h-8 rounded-full bg-red-100 border border-red-200 flex items-center justify-center text-xs font-bold text-red-500">?</div>
+                                                <div>
+                                                    <span class="text-red-600 text-sm font-bold">Unknown</span>
+                                                    <p class="text-[10px] text-gray-400">Guest</p>
+                                                </div>
+                                            <?php endif; ?>
                                         </div>
                                     </td>
 
-                                    <!-- Action Badge -->
                                     <td class="px-6 py-4 align-middle">
-                                        <?php $badge = getBadgeColor($row['action_type']); ?>
+                                        <?php 
+                                            $badge = getBadgeColor($row['action_type']);
+                                            if($row['action_type'] == 'Login Failed') $badge = 'bg-red-100 text-red-800 border-red-200 dot-red';
+                                        ?>
                                         <span class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md text-xs font-medium border <?= $badge ?>">
-                                            <span class="w-1.5 h-1.5 rounded-full <?= explode(' ', $badge)[3] ?>"></span>
+                                            <span class="w-1.5 h-1.5 rounded-full <?= explode(' ', $badge)[3] ?? 'bg-gray-500' ?>"></span>
                                             <?= $row['action_type'] ?>
                                         </span>
                                     </td>
 
-                                    <!-- Detail -->
                                     <td class="px-6 py-4 align-middle">
                                         <p class="text-[#0d121b] text-sm font-medium truncate max-w-[200px]"><?= $row['target_name'] ?></p>
                                         <p class="text-[#64748b] text-xs font-mono"><?= $row['detail'] ?></p>
                                     </td>
 
-                                    <!-- Device -->
                                     <td class="px-6 py-4 align-middle">
                                         <div class="flex flex-col gap-1">
                                             <div class="flex items-center gap-1.5">
@@ -208,11 +182,9 @@ function getDeviceIcon($device) {
                                         </div>
                                     </td>
 
-                                    <!-- IP -->
                                     <td class="px-6 py-4 align-middle">
                                         <span class="text-[#64748b] text-sm font-mono"><?= $row['ip_address'] ?></span>
                                     </td>
-
                                 </tr>
                                 <?php endwhile; ?>
                                 <?php else: ?>
@@ -220,17 +192,12 @@ function getDeviceIcon($device) {
                                         <td colspan="6" class="px-6 py-8 text-center text-gray-500">Belum ada aktivitas tercatat.</td>
                                     </tr>
                                 <?php endif; ?>
-
                             </tbody>
                         </table>
                     </div>
                     
-                    <!-- Pagination -->
                     <div class="px-6 py-4 bg-white border-t border-[#e2e8f0] flex items-center justify-between">
                         <span class="text-sm text-[#64748b]">Showing <?= $total_rows ?> entries</span>
-                        <div class="flex items-center gap-2">
-                            <button class="w-8 h-8 flex items-center justify-center rounded-lg bg-primary text-white text-sm font-medium">1</button>
-                        </div>
                     </div>
                 </div>
 
