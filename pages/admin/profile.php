@@ -71,21 +71,10 @@ $join_date = date('d F Y', strtotime($admin['created_at']));
     <main class="flex-1 flex flex-col h-full overflow-hidden relative md:ml-0 mt-14 md:mt-0">
         
         <!-- HEADER -->
-        <header class="h-16 bg-white border-b border-[#cfd7e7] flex items-center justify-between px-8 shrink-0">
-            <div class="flex items-center gap-2 text-sm text-[#4c669a]">
-                <span class="hover:text-primary transition-colors cursor-pointer">Pengaturan</span>
-                <span class="material-symbols-outlined text-xs">chevron_right</span>
-                <span class="font-medium text-[#0d121b]">Profil Admin</span>
-            </div>
-            <div class="flex items-center gap-3">
-                <div class="text-right hidden sm:block">
-                    <p class="text-sm font-semibold text-[#0d121b]"><?= $admin['name'] ?></p>
-                    <p class="text-xs text-[#4c669a]"><?= $admin['email'] ?></p>
-                </div>
-                <div class="w-10 h-10 rounded-full bg-gray-200 bg-cover bg-center border border-gray-300" style="background-image: url('../../assets/images/user-placeholder.jpg');"></div>
-            </div>
-        </header>
-
+        <?php 
+            $pageTitle = "Pengaturan > Profil Admin"; // Judul untuk breadcrumb
+            include '../../assets/components/admin/header.php'; 
+        ?>
         <!-- CONTENT -->
         <div class="flex-1 overflow-y-auto bg-background-light p-4 md:p-12 lg:p-20">
             <div class="max-w-[800px] mx-auto">
@@ -98,7 +87,11 @@ $join_date = date('d F Y', strtotime($admin['created_at']));
                         <!-- Profile Avatar Area -->
                         <div class="flex flex-col md:flex-row justify-between items-end -mt-16 mb-12 gap-6">
                             <div class="relative">
-                                <div class="w-32 h-32 md:w-40 md:h-40 rounded-full border-4 border-white bg-white shadow-md overflow-hidden bg-cover bg-center" style="background-image: url('../../assets/images/user-placeholder.jpg');"></div>
+                                <?php 
+                                    $avatar = !empty($admin['avatar']) ? "../../" . $admin['avatar'] : "../../assets/images/user-placeholder.jpg";
+                                ?>
+                                <!-- Gunakan tag IMG untuk lebih fleksibel -->
+                                <img src="<?= $avatar ?>" class="w-32 h-32 md:w-40 md:h-40 rounded-full border-4 border-white shadow-md object-cover bg-white">
                                 <div class="absolute bottom-2 right-2 w-6 h-6 bg-green-500 border-2 border-white rounded-full"></div>
                             </div>
                             <div class="flex-1 flex flex-col md:flex-row md:justify-end">

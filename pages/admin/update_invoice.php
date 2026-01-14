@@ -137,20 +137,11 @@ $showTax = $data['tax_percent'] > 0;
 
     <main class="flex-1 flex flex-col h-full overflow-hidden relative md:ml-0 mt-14 md:mt-0">
         
-        <header class="h-16 bg-white border-b border-[#cfd7e7] flex items-center justify-between px-8 shrink-0">
-            <div class="flex items-center gap-4">
-                <a href="manage_invoices.php" class="flex items-center gap-2 text-[#64748b] hover:text-primary transition-colors">
-                    <span class="material-symbols-outlined">arrow_back</span> <span class="font-medium">Kembali</span>
-                </a>
-                <h2 class="text-[#0d121b] text-lg font-bold">Update Nota <?= $data['invoice_number'] ?></h2>
-            </div>
-            
-            <div class="flex items-center gap-3">
-                <a href="download_invoice.php?id=<?= $id ?>" target="_blank" class="flex items-center gap-2 px-4 py-2 bg-white border border-gray-300 rounded-lg text-sm font-bold hover:bg-gray-50 text-gray-700 transition-colors">
-                    <span class="material-symbols-outlined text-[18px]">download</span> PDF
-                </a>
-            </div>
-        </header>
+        <?php 
+    // Kita bisa mengambil nomor invoice dari variabel $data yang sudah ada di atas
+            $pageTitle = "Nota > Update " . ($data['invoice_number'] ?? ''); 
+            include '../../assets/components/admin/header.php'; 
+        ?>
 
         <div class="flex-1 overflow-y-auto bg-background-light p-4 md:p-8">
             <form method="POST" action="" class="max-w-[1000px] mx-auto flex flex-col gap-6 pb-12">

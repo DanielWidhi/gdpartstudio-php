@@ -110,20 +110,10 @@ $total_rows = mysqli_num_rows($result);
     <main class="flex-1 flex flex-col h-full overflow-hidden relative md:ml-0 mt-14 md:mt-0">
         
         <!-- HEADER -->
-        <header class="h-16 bg-white border-b border-[#cfd7e7] flex items-center justify-between px-8 shrink-0">
-            <div class="flex items-center gap-2 text-sm text-[#4c669a]">
-                <span>Manajemen</span>
-                <span class="material-symbols-outlined text-[16px]">chevron_right</span>
-                <span class="text-[#0d121b] font-medium">Nota</span>
-            </div>
-            <div class="flex items-center gap-3">
-                <div class="text-right hidden sm:block">
-                    <p class="text-sm font-semibold text-[#0d121b]"><?= $_SESSION['admin_name'] ?></p>
-                    <p class="text-xs text-[#4c669a]"><?= $_SESSION['admin_email'] ?></p>
-                </div>
-                <div class="w-10 h-10 rounded-full bg-gray-200 bg-cover bg-center border border-gray-300" style="background-image: url('../../assets/images/user-placeholder.jpg');"></div>
-            </div>
-        </header>
+        <?php 
+            $pageTitle = "Manajemen > Nota"; 
+            include '../../assets/components/admin/header.php'; 
+        ?>
 
         <!-- CONTENT -->
         <div class="flex-1 overflow-y-auto bg-background-light p-4 md:p-8">

@@ -121,16 +121,10 @@ $total_rows = mysqli_num_rows($result);
     <main class="flex-1 flex flex-col h-full overflow-hidden relative md:ml-0 mt-14 md:mt-0">
         
         <!-- TOP HEADER -->
-        <header class="h-16 bg-white border-b border-[#cfd7e7] flex items-center justify-end px-8 shrink-0">
-            <div class="flex items-center gap-3">
-                <div class="text-right hidden sm:block">
-                    <p class="text-sm font-semibold text-[#0d121b]"><?= $_SESSION['admin_name'] ?? 'Admin User' ?></p>
-                    <p class="text-xs text-[#4c669a]"><?= $_SESSION['admin_email'] ?? 'admin@gdpartstudio.com' ?></p>
-                </div>
-                <!-- Avatar -->
-                <div class="w-10 h-10 rounded-full bg-gray-200 bg-cover bg-center border border-gray-300" style="background-image: url('../../assets/images/user-placeholder.jpg');"></div>
-            </div>
-        </header>
+        <?php 
+            $pageTitle = "Manajemen > Services"; 
+            include '../../assets/components/admin/header.php'; 
+        ?>
 
         <!-- CONTENT SCROLL AREA -->
         <div class="flex-1 overflow-y-auto bg-background-light p-4 md:p-8">

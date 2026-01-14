@@ -94,22 +94,10 @@ $q_recent = mysqli_query($conn, "SELECT * FROM projects ORDER BY created_at DESC
     <main class="flex-1 flex flex-col h-full overflow-hidden relative md:ml-0 mt-14 md:mt-0">
         
         <!-- HEADER -->
-        <header class="h-16 bg-white border-b border-[#cfd7e7] flex items-center justify-between px-8 shrink-0">
-            <div class="flex items-center gap-4">
-                <div class="flex items-center gap-2 px-3 py-1.5 bg-gray-50 rounded-full border border-gray-100">
-                    <span class="material-symbols-outlined text-primary text-[18px]">schedule</span>
-                    <span class="text-sm font-bold text-[#0d121b] tabular-nums" id="clock">00:00:00</span>
-                    <span class="text-[10px] font-medium text-[#4c669a] border-l border-gray-300 pl-2 uppercase">WIB</span>
-                </div>
-            </div>
-            <div class="flex items-center gap-3">
-                <div class="text-right hidden sm:block">
-                    <p class="text-sm font-semibold text-[#0d121b]"><?= $_SESSION['admin_name'] ?? 'Admin' ?></p>
-                    <p class="text-xs text-[#4c669a]"><?= $_SESSION['admin_email'] ?? 'admin@gdpartstudio.com' ?></p>
-                </div>
-                <div class="w-10 h-10 rounded-full bg-gray-200 bg-cover bg-center border border-gray-300" style="background-image: url('../../assets/images/user-placeholder.jpg');"></div>
-            </div>
-        </header>
+        <?php 
+            $pageTitle = "Dashboard Ringkasan"; 
+            include '../../assets/components/admin/header.php'; 
+        ?>
 
         <!-- CONTENT -->
         <div class="flex-1 overflow-y-auto bg-background-light p-4 md:p-8">

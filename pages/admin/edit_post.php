@@ -147,15 +147,10 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     <!-- MAIN CONTENT -->
     <main class="flex-1 flex flex-col h-full overflow-hidden relative md:ml-0 mt-14 md:mt-0">
         
-        <header class="h-16 bg-white border-b border-[#cfd7e7] flex items-center justify-end px-8 shrink-0">
-            <div class="flex items-center gap-3">
-                <div class="text-right hidden sm:block">
-                    <p class="text-sm font-semibold text-[#0d121b]"><?= $_SESSION['admin_name'] ?? 'Admin' ?></p>
-                    <p class="text-xs text-[#4c669a]"><?= $_SESSION['admin_email'] ?? 'admin@email.com' ?></p>
-                </div>
-                <div class="w-10 h-10 rounded-full bg-gray-200 bg-cover bg-center border border-gray-300" style="background-image: url('../../assets/images/user-placeholder.jpg');"></div>
-            </div>
-        </header>
+        <?php 
+            $pageTitle = "Portfolio > Edit Postingan"; 
+            include '../../assets/components/admin/header.php'; 
+        ?>
 
         <div class="flex-1 overflow-y-auto bg-background-light p-4 md:p-8">
             <div class="max-w-[1200px] mx-auto flex flex-col gap-6">

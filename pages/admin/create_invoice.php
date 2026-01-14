@@ -96,13 +96,10 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     <?php include '../../assets/components/admin/mobile_header.php'; ?>
 
     <main class="flex-1 flex flex-col h-full overflow-hidden relative md:ml-0 mt-14 md:mt-0">
-        <header class="h-16 bg-white border-b border-[#cfd7e7] flex items-center justify-between px-8 shrink-0">
-            <div class="flex items-center gap-4">
-                <a href="manage_invoices.php" class="flex items-center gap-2 text-[#64748b] hover:text-primary transition-colors">
-                    <span class="material-symbols-outlined">arrow_back</span><span class="font-medium">Kembali</span>
-                </a>
-            </div>
-        </header>
+        <?php 
+            $pageTitle = "Nota > Buat Baru"; 
+            include '../../assets/components/admin/header.php'; 
+        ?>
 
         <div class="flex-1 overflow-y-auto bg-background-light p-4 md:p-8">
             <form method="POST" action="" class="max-w-[1200px] mx-auto flex flex-col gap-8 pb-12">
