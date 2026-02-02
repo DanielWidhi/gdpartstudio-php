@@ -1,6 +1,6 @@
 <?php
 session_start();
-include '../../db.php';
+include '../../../db.php';
 
 // 1. Cek Login
 if (!isset($_SESSION['admin_logged_in']) || $_SESSION['admin_logged_in'] !== true) {

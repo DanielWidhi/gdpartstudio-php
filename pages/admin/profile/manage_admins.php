@@ -1,7 +1,7 @@
 <?php
 session_start();
-include '../../db.php';
-include 'log_helper.php';
+include '../../../db.php';
+include '../logs/log_helper.php';
 
 // 1. CEK LOGIN
 if (!isset($_SESSION['admin_logged_in']) || $_SESSION['admin_logged_in'] !== true) {
@@ -65,16 +65,16 @@ function getInitials($name){
 
     <?php 
         $currentPage = 'admins'; 
-        include '../../assets/components/admin/sidebar.php'; 
+        include '../../../assets/components/admin/sidebar.php'; 
     ?>
-    <?php include '../../assets/components/admin/mobile_header.php'; ?>
+    <?php include '../../../assets/components/admin/mobile_header.php'; ?>
 
     <main class="flex-1 flex flex-col h-full overflow-hidden relative md:ml-0 mt-14 md:mt-0">
         
         <!-- INCLUDE HEADER BARU -->
         <?php 
             $pageTitle = "Manajemen > Daftar Admin"; 
-            include '../../assets/components/admin/header.php'; 
+            include '../../../assets/components/admin/header.php'; 
         ?>
 
         <div class="flex-1 overflow-y-auto bg-background-light p-4 md:p-8">

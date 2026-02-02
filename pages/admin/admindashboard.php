@@ -1,6 +1,9 @@
 <?php
 session_start();
 include '../../db.php';
+$path = '..';
+$currentPage = 'dashboard'; 
+include '../../assets/components/admin/sidebar.php';
 
 // 1. CEK LOGIN
 if (!isset($_SESSION['admin_logged_in']) || $_SESSION['admin_logged_in'] !== true) {
